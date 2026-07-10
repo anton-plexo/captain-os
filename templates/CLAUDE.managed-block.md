@@ -1,11 +1,14 @@
 <!-- captain-os-managed:start -->
 ## Captain OS Adapter
 
-Claude reads `.captain-os/project.yaml` and `.captain-os/runtime-adapters.yaml`.
+Claude reads `.captain-os/project.yaml`, `.captain-os/runtime-adapters.yaml`, and `.captain-os/task-spine.yaml`.
 
 Default role: peer captain in direct Claude sessions, read-only reviewer when packeted by another captain.
 
 Rules:
+- Resume the durable goal from `nativeGoalRuntime.currentCheckpoint`; never replace live checkpoint, lane, or evidence state during an adapter update.
+- Reuse the same specialist lane/thread before spawning a replacement when supported. Bound retries and record each attempt.
+- Execution success is not acceptance. Mark an acceptance row PASS only with typed evidence bound to its checkpoint, row, and verified reference; complete only when every required row passes.
 - Swarm-labelled work must score at least 9/10. Red-flag any packet where Captain is the main implementer, fewer than two fresh non-review critical-path lane artifacts exist, Claude/StarPom evidence is stale, or text-only planning is reported as execution.
 - Red-flag delivery/launch packets where `deliveryCalibration.currentCycle` is missing or process artifacts are counted as progress without named deliverables/pages/cohorts closed to `ready_with_evidence`, `not_ready_with_exact_blocker`, or `blocked_owner_decision_required`. Use `captain-os delivery-calibration`; it reads `.captain-os/task-spine.yaml` by default when present.
 - Red-flag `agent thread limit reached` when Captain has not captured closeout deltas, updated lane memory, attached issue/outcome/evidence refs, closed/recycled finished threads, and retried the next bounded spawn.

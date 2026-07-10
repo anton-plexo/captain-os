@@ -3,19 +3,25 @@ adapters:
   - runtimeId: codex
     ownerRegistryId: captain-codex
     instructionEntrypoint: AGENTS.md
-    captainEligibility: primary
+    captainEligibility: dynamic
     defaultRole: captain
     swarmRole: orchestrator_and_integrator
     captainOsHooks:
       agentLaneLifecycle: supported
+      nativeGoal: supported
+      persistentLaneReuse: supported
+      typedEvidence: supported
   - runtimeId: claude-code
     ownerRegistryId: captain-claude
     instructionEntrypoint: CLAUDE.md
-    captainEligibility: secondary
-    defaultRole: read_only_judge
+    captainEligibility: dynamic
+    defaultRole: captain_first
     swarmRole: standing_review_lane
     captainOsHooks:
-      agentLaneLifecycle: handoff_required
+      agentLaneLifecycle: supported
+      nativeGoal: supported
+      persistentLaneReuse: supported
+      typedEvidence: supported
   - runtimeId: gemini-coding
     ownerRegistryId: captain-gemini
     instructionEntrypoint: GEMINI.md
