@@ -9,6 +9,25 @@ goal: >
   Keep one durable task spine while allowing multiple bounded active lanes
   with persistent lane memory.
 
+nativeGoalRuntime:
+  status: active
+  currentCheckpoint: bootstrap
+  stopPolicy:
+    completeOnlyWhenAllAcceptanceRowsPass: true
+    blockedOnlyForOperatorOrExternalDependency: true
+  checkpoints:
+    - checkpointId: bootstrap
+      dependsOn: []
+      status: active
+      acceptanceRows:
+        - rowId: portable-runtime-installed
+          status: pending
+          evidenceRefs: []
+  typedEvidence:
+    requireCheckpointRowBinding: true
+    requireVerifiedRef: true
+    allowExecutionSuccessAsAcceptance: false
+
 currentLanes:
   mode: single_spine_multi_lane
   captainRole: orchestrator

@@ -3,10 +3,14 @@
 
 Project manifest: `.captain-os/project.yaml`
 Runtime adapter: `.captain-os/runtime-adapters.yaml`
+Durable goal and lane state: `.captain-os/task-spine.yaml`
 Evidence path: `.ship/lab/runs`
 Global blocking: disabled by default
 
 Rules:
+- Resume the durable goal from `nativeGoalRuntime.currentCheckpoint`; never replace live checkpoint, lane, or evidence state during an adapter update.
+- Reuse the same specialist lane/thread before spawning a replacement when the runtime supports it. Bound retries and record each attempt.
+- Execution success is not acceptance. Mark an acceptance row PASS only with typed evidence bound to its checkpoint, row, and verified reference; complete only when every required row passes.
 - Non-trivial work uses one task spine with multiple bounded active lanes when safe. Captain is orchestrator by default; sailors execute packeted lanes.
 - For Tier 2+ implementation, choose `single_lane` with a reason or `parallel_lane_swarm` with 2-4 active lanes, lane memory, disjoint scope, evidence owed, and stop conditions.
 - Swarm-labelled work must score at least 9/10. Captain implementation share must be `<= 50%`, at least two fresh non-review critical-path lane artifacts must exist, Claude Code and StarPom must be fresh when required, and text-only planning is not execution. Run `captain-os swarm-score` before PR/final swarm claims.

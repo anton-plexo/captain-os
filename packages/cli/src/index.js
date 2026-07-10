@@ -34,6 +34,7 @@ import { classifyIntent } from './intent-router.js';
 import { runSwarmRuntimeScoreCommand } from './swarm-runtime-score.js';
 import { runDeliveryCalibrationCommand } from './delivery-calibration.js';
 import { runAgentLaneLifecycleCommand } from './agent-lane-lifecycle.js';
+import { runPortableInstall } from './portable-installer.js';
 
 const command = process.argv[2] || 'help';
 
@@ -75,9 +76,12 @@ if (command === 'doctor') {
   runConfigureWizard(!isDryRun);
 } else if (command === 'init') {
   const isDryRun = process.argv.includes('--dry-run');
-  if (isDryRun) {
-    console.log('⚡ Запуск мастера настройки в режиме dry-run (неинтерактивный)...');
-    runSetupWizard(false);
+  const isApply = process.argv.includes('--apply');
+  if (isDryRun && isApply) {
+    console.error('Choose exactly one init mode: --dry-run or --apply');
+    process.exitCode = 2;
+  } else if (isDryRun || isApply) {
+    runPortableInstall({ apply: isApply });
   } else {
     runSetupWizard(true);
   }
@@ -111,7 +115,8 @@ if (command === 'doctor') {
 } else {
   console.log('=== Captain OS CLI ===');
   console.log('Available commands:');
-  console.log('  init                 - Initialize project workspace (add --dry-run for non-interactive)');
+  console.log('  init --dry-run       - Preview a safe, non-interactive installation');
+  console.log('  init --apply         - Install/update managed blocks without replacing host state');
   console.log('  configure            - Run interactive prompt-wizard to customize project rules');
   console.log('  formulate            - Generate perfect DDP goals from simple user inputs');
   console.log('  doctor               - Check environment health and readiness');
