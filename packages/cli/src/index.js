@@ -35,6 +35,8 @@ import { runSwarmRuntimeScoreCommand } from './swarm-runtime-score.js';
 import { runDeliveryCalibrationCommand } from './delivery-calibration.js';
 import { runAgentLaneLifecycleCommand } from './agent-lane-lifecycle.js';
 import { runPortableInstall } from './portable-installer.js';
+import { runGoalRuntimeCommand } from './goal-runtime.js';
+import { runWorkerCommand } from './runtime-launcher.js';
 
 const command = process.argv[2] || 'help';
 
@@ -93,6 +95,10 @@ if (command === 'doctor') {
   process.exitCode = runDeliveryCalibrationCommand(process.argv.slice(3));
 } else if (command === 'agent-lane-lifecycle' || command === 'lane-lifecycle') {
   process.exitCode = runAgentLaneLifecycleCommand(process.argv.slice(3));
+} else if (command === 'goal-runtime') {
+  process.exitCode = runGoalRuntimeCommand(process.argv.slice(3));
+} else if (command === 'worker') {
+  process.exitCode = runWorkerCommand(process.argv.slice(3));
 } else if (command === 'simplify') {
   const isDryRun = process.argv.includes('--dry-run');
   executeSimplificationPipeline(process.cwd(), isDryRun).catch(e => {
@@ -123,6 +129,8 @@ if (command === 'doctor') {
   console.log('  swarm-score          - Run P11H swarm 9/10 runtime score gate');
   console.log('  delivery-calibration - Run live task-spine delivery calibration gate (--fixtures for core simulations)');
   console.log('  agent-lane-lifecycle - Generate a P11L thread-limit closeout/recycle corrective packet');
+  console.log('  goal-runtime         - Evaluate a durable goal DAG from JSON receipts');
+  console.log('  worker launch|ingest - Launch a runtime or normalize a host-native receipt');
   console.log('  validate-lock        - Validate .captain-os.lock.json structure and policies');
   console.log('  simplify             - Run code simplification pipeline (add --dry-run for preview)');
   console.log('  snapshot list        - List all saved snapshots');

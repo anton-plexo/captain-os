@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "captain-worker-receipt.schema.json",
+  "title": "Captain OS normalized worker receipt",
+  "type": "object",
+  "required": ["schemaVersion", "runtimeId", "goalId", "goalRevision", "runId", "checkpointId", "rowId", "attemptId", "attemptNumber", "packetDigest", "outcome", "evidence"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "captain-worker-receipt.v1" },
+    "runtimeId": { "enum": ["codex", "claude-code"] },
+    "goalId": { "type": "string", "minLength": 1 },
+    "goalRevision": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "checkpointId": { "type": "string", "minLength": 1 },
+    "rowId": { "type": "string", "minLength": 1 },
+    "attemptId": { "type": "string", "minLength": 1 },
+    "attemptNumber": { "type": "integer", "minimum": 1, "maximum": 2 },
+    "packetDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "outcome": { "enum": ["PASS", "FAIL", "BLOCK"] },
+    "blocker": {
+      "type": "object",
+      "required": ["kind", "reason"],
+      "properties": { "kind": { "enum": ["operator", "external_access"] }, "reason": { "type": "string", "minLength": 1 }, "impasseAttempts": { "type": "integer", "minimum": 2 } }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref", "sha256", "verified"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "verified": { "const": true }
+        }
+      }
+    }
+  }
+}
