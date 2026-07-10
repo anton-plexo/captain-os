@@ -11,6 +11,11 @@ adapters:
       nativeGoal: supported
       persistentLaneReuse: supported
       typedEvidence: supported
+    launcher:
+      transport: process_cli
+      executable: codex
+      receiptSchema: captain-worker-receipt.v1
+      missingCapabilityBehavior: handoff
   - runtimeId: claude-code
     ownerRegistryId: captain-claude
     instructionEntrypoint: CLAUDE.md
@@ -22,6 +27,11 @@ adapters:
       nativeGoal: supported
       persistentLaneReuse: supported
       typedEvidence: supported
+    launcher:
+      transport: process_cli
+      executable: claude
+      receiptSchema: captain-worker-receipt.v1
+      missingCapabilityBehavior: handoff
   - runtimeId: gemini-coding
     ownerRegistryId: captain-gemini
     instructionEntrypoint: GEMINI.md
@@ -30,3 +40,10 @@ adapters:
     swarmRole: optional_judge_or_packeted_lane
     captainOsHooks:
       agentLaneLifecycle: manual
+      nativeGoal: manual
+      persistentLaneReuse: manual
+      typedEvidence: manual
+    launcher:
+      transport: host_native_receipt
+      receiptSchema: captain-worker-receipt.v1
+      missingCapabilityBehavior: handoff

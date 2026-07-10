@@ -40,9 +40,10 @@
     "swarm:score": "node packages/cli/src/index.js swarm-score",
     "delivery:calibration": "node packages/cli/src/index.js delivery-calibration",
     "agent:lane-lifecycle": "node packages/cli/src/index.js agent-lane-lifecycle",
+    "goal:runtime": "node packages/cli/src/index.js goal-runtime",
     "snapshot:save": "node packages/cli/src/index.js snapshot save",
     "snapshot:list": "node packages/cli/src/index.js snapshot list",
     "rollback": "node packages/cli/src/index.js rollback",
-    "test": "node packages/cli/src/index.js doctor && node packages/cli/src/index.js swarm-score && node packages/cli/src/index.js delivery-calibration --fixtures && node packages/cli/src/index.js agent-lane-lifecycle --outcomes smoke-outcome && node packages/cli/src/simplifier.test.js && node --test packages/cli/src/harness-modules.test.js packages/cli/src/portable-installer.test.js"
+    "test": "node packages/cli/src/index.js doctor && node packages/cli/src/index.js swarm-score && node packages/cli/src/index.js delivery-calibration --fixtures && node packages/cli/src/index.js agent-lane-lifecycle --outcomes smoke-outcome && node packages/cli/src/simplifier.test.js && node --test packages/cli/src/harness-modules.test.js packages/cli/src/portable-installer.test.js packages/cli/src/goal-runtime.test.js packages/cli/src/runtime-launcher.test.js"
   }
 }
