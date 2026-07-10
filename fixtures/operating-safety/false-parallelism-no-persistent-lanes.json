@@ -1,0 +1,23 @@
+{
+  "id": "false-parallelism-no-persistent-lanes",
+  "title": "False swarm without persistent lanes",
+  "task": "Captain calls this swarm development, but all five agents are one-shot reviewers, no lane has memory, and Captain waits for them sequentially before doing the work locally.",
+  "sourceCase": "docs/protocols/swarm-development-runtime.md#false-parallelism-block",
+  "tags": ["operating_safety", "captain_os_runtime", "swarm_runtime"],
+  "expected": {
+    "intentMode": "system_refactor",
+    "minComplexityTier": "T3",
+    "minPlanDepth": "D3",
+    "requiredBlocks": ["false_parallelism_no_persistent_lanes", "lane_memory_missing"],
+    "requiredSailors": ["Captain", "Runtime", "StarPom"]
+  },
+  "context": {
+    "claimedSwarm": "true",
+    "oneShotReviewersOnly": "true",
+    "missingLaneMemory": "true",
+    "sequentialAgentWait": "true",
+    "captainAsPrimaryWorker": "true",
+    "activeRowCount": "5",
+    "acceptanceObject": "Persistent lane-state swarm runtime"
+  }
+}

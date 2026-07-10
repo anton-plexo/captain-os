@@ -11,8 +11,8 @@ import {
 } from './schema'
 import { LabInputError, readJson, readText, repoRoot } from './io'
 
-const FIXTURE_ROOT = 'docs/process/captain-os-lab/fixtures'
-const FIXTURE_DIRS = ['high-anger', 'methodology', 'operating-safety', 'auto-bootstrap']
+const FIXTURE_ROOTS = ['fixtures', 'docs/process/captain-os-lab/fixtures']
+const FIXTURE_DIRS = ['high-anger', 'methodology', 'operating-safety', 'auto-bootstrap', 'p9d-hardening']
 
 function requireString(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
@@ -82,16 +82,38 @@ export function validateFixtureInput(value: unknown): FixtureInput {
 }
 
 export function fixturePath(id: string): string {
-  for (const dir of FIXTURE_DIRS) {
-    const path = resolve(repoRoot(), FIXTURE_ROOT, dir, `${id}.json`)
-    try {
-      readText(path)
-      return path
-    } catch {
-      // Try the next fixture family.
+  for (const root of FIXTURE_ROOTS) {
+    for (const dir of FIXTURE_DIRS) {
+      const path = resolve(repoRoot(), root, dir, `${id}.json`)
+      try {
+        readText(path)
+        return path
+      } catch {
+        // Try the next fixture family/root.
+      }
     }
   }
-  return resolve(repoRoot(), FIXTURE_ROOT, FIXTURE_DIRS[0], `${id}.json`)
+  return resolve(repoRoot(), FIXTURE_ROOTS[0], FIXTURE_DIRS[0], `${id}.json`)
+}
+
+function fixtureRootForFamily(family: string): string {
+  for (const root of FIXTURE_ROOTS) {
+    const dir = resolve(repoRoot(), root, family)
+    try {
+      readdirSync(dir)
+      return root
+    } catch {
+      // Try the next fixture root.
+    }
+  }
+  return FIXTURE_ROOTS[0]
+}
+
+export function fixtureFilePath(family: string, fileName: string): string {
+  if (!FIXTURE_DIRS.includes(family)) {
+    throw new LabInputError(`unknown fixture family: ${family}`)
+  }
+  return resolve(repoRoot(), fixtureRootForFamily(family), family, fileName)
 }
 
 export function loadFixtureById(id: string): FixtureInput {
@@ -100,7 +122,7 @@ export function loadFixtureById(id: string): FixtureInput {
 
 export function loadAllFixtures(): FixtureInput[] {
   return FIXTURE_DIRS.flatMap((family) => {
-    const dir = resolve(repoRoot(), FIXTURE_ROOT, family)
+    const dir = resolve(repoRoot(), fixtureRootForFamily(family), family)
     return readdirSync(dir)
       .filter((file) => file.endsWith('.json'))
       .sort()
@@ -112,7 +134,7 @@ export function loadFixtureFamily(family: string): FixtureInput[] {
   if (!FIXTURE_DIRS.includes(family)) {
     throw new LabInputError(`unknown fixture family: ${family}`)
   }
-  const dir = resolve(repoRoot(), FIXTURE_ROOT, family)
+  const dir = resolve(repoRoot(), fixtureRootForFamily(family), family)
   return readdirSync(dir)
     .filter((file) => file.endsWith('.json'))
     .sort()

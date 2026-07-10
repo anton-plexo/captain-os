@@ -119,7 +119,7 @@ interface JudgeReport {
   judgePerspective: P9BPerspective
   inputMode: P9BInputMode
   domain: P9BDomain
-  advisoryDecision: 'ready_for_execution' | 'continue_now' | 'accepted_partial_next_packet' | 'blocked_external'
+  advisoryDecision: 'ready_for_owner_review_planning_only' | 'ready_for_execution' | 'continue_now' | 'accepted_partial_next_packet' | 'blocked_external'
   p9dBlocks: string[]
   humanOutcomeLabel: HumanOutcomeLabel
   confidence: Confidence
@@ -278,7 +278,7 @@ function advisoryDecision(task: P9BTaskSummary): JudgeReport['advisoryDecision']
   if (decisions.includes('blocked_external')) return 'blocked_external'
   if (decisions.includes('accepted_partial_next_packet')) return 'accepted_partial_next_packet'
   if (decisions.includes('continue_now')) return 'continue_now'
-  return 'ready_for_execution'
+  return 'ready_for_owner_review_planning_only'
 }
 
 function p9dBlocks(task: P9BTaskSummary): string[] {
@@ -610,7 +610,8 @@ function main(): void {
 }
 
 function isDirectEntrypoint(fileName: string): boolean {
-  return (process.argv[1] ?? '').replace(/\\/g, '/').endsWith(`/scripts/captain-lab/${fileName}`)
+  const entrypoint = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return entrypoint.endsWith(`/packages/core/src/${fileName}`) || entrypoint.endsWith(`/scripts/captain-lab/${fileName}`)
 }
 
 if (isDirectEntrypoint('p9b-reconcile.ts')) main()

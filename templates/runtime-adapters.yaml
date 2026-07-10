@@ -5,13 +5,22 @@ adapters:
     instructionEntrypoint: AGENTS.md
     captainEligibility: primary
     defaultRole: captain
+    swarmRole: orchestrator_and_integrator
+    captainOsHooks:
+      agentLaneLifecycle: supported
   - runtimeId: claude-code
     ownerRegistryId: captain-claude
     instructionEntrypoint: CLAUDE.md
     captainEligibility: secondary
     defaultRole: read_only_judge
+    swarmRole: standing_review_lane
+    captainOsHooks:
+      agentLaneLifecycle: handoff_required
   - runtimeId: gemini-coding
     ownerRegistryId: captain-gemini
     instructionEntrypoint: GEMINI.md
     captainEligibility: crew_only
     defaultRole: read_only_judge
+    swarmRole: optional_judge_or_packeted_lane
+    captainOsHooks:
+      agentLaneLifecycle: manual

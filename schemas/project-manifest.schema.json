@@ -42,6 +42,76 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "swarmRuntime": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "defaultExecutionModel": {
+          "type": "string",
+          "enum": ["single_lane", "parallel_lane_swarm"]
+        },
+        "captainRole": {
+          "type": "string",
+          "enum": ["orchestrator", "orchestrator_and_worker"]
+        },
+        "laneMemory": {
+          "type": "string",
+          "enum": ["optional", "required_for_tier2_plus", "required_for_all_packeted_lanes"]
+        },
+        "activeLaneTarget": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number", "minimum": 0 },
+            "max": { "type": "number", "minimum": 1 }
+          }
+        },
+        "maxCaptainChildren": { "type": "number", "minimum": 1 },
+        "standingReviewLane": { "type": "string" },
+        "starpomLane": { "type": "string" }
+      }
+    },
+    "operatorDecisionInterrupt": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "appliesTo": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ownerChoicesRequired": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number", "minimum": 2 },
+            "max": { "type": "number", "maximum": 3 }
+          }
+        },
+        "defaultOnBlocker": {
+          "type": "string",
+          "enum": ["blocked_waiting_owner"]
+        },
+        "adjacentPlanningDefaultAllowed": { "const": false },
+        "adjacentPlanningBypass": {
+          "type": "object",
+          "properties": {
+            "requiresOwnerApproval": { "const": true },
+            "requiresTimebox": { "const": true },
+            "requiresVisibleWarning": { "const": true }
+          }
+        },
+        "blockedButContinuingBudget": {
+          "type": "object",
+          "properties": {
+            "maxPlanningOnlyPackets": { "type": "number", "maximum": 2 },
+            "maxHoursWithoutOwnerDecision": { "type": "number", "maximum": 2 }
+          }
+        },
+        "seoProductionSuccessEvidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "http200SuccessAllowed": { "const": false }
+      }
+    },
     "evidencePolicy": {
       "type": "object",
       "required": [

@@ -102,7 +102,7 @@ export async function runSetupWizard(interactive = true, defaults = {}) {
         input: process.stdin,
         output: process.stdout,
       })
-    : rl;
+    : null;
 
   try {
     // 1. Имя проекта
@@ -217,6 +217,53 @@ paths:
   ragSources:
 ${ragPaths.map((p) => `    - ${p}`).join('\n')}
 
+swarmRuntime:
+  defaultExecutionModel: parallel_lane_swarm
+  captainRole: orchestrator
+  laneMemory: required_for_tier2_plus
+  scoreGate:
+    minScore: 9
+    captainImplementationShareMax: 0.5
+    reviewWindowMinutes: 30
+    command: captain-os swarm-score
+  activeLaneTarget:
+    min: 2
+    max: 4
+  maxCaptainChildren: 5
+  standingReviewLane: claude-code
+  starpomLane: required_before_final_claim
+
+operatorDecisionInterrupt:
+  protocol: docs/protocols/operator-decision-interrupt.md
+  appliesTo:
+    - production
+    - opening
+    - indexing
+    - deploy
+    - gsc
+    - sitemap
+    - crawler_visibility
+  ownerChoicesRequired:
+    min: 2
+    max: 3
+  defaultOnBlocker: blocked_waiting_owner
+  adjacentPlanningDefaultAllowed: false
+  adjacentPlanningBypass:
+    requiresOwnerApproval: true
+    requiresTimebox: true
+    requiresVisibleWarning: true
+  blockedButContinuingBudget:
+    maxPlanningOnlyPackets: 2
+    maxHoursWithoutOwnerDecision: 2
+  seoProductionSuccessEvidence:
+    - raw_html
+    - rendered_html
+    - canonical
+    - robots
+    - h1
+    - sitemap
+  http200SuccessAllowed: false
+
 managedBlocks:
   - AGENTS.md#captain-os-managed
   - CLAUDE.md#captain-os-managed
@@ -253,6 +300,175 @@ evidencePolicy:
     writeFileSync(resolve(configDir, 'project.yaml'), projectYamlContent, 'utf8');
     console.log(`✅ Создан манифест проекта: .captain-os/project.yaml`);
 
+    const today = new Date().toISOString().slice(0, 10);
+    const taskSpineContent = `schemaVersion: captain-task-spine.v1
+spineId: ${projectName.toUpperCase().replace(/[^A-Z0-9]+/g, '-') || 'HOST'}-SPINE
+status: active
+mode: shadow
+updatedAt: "${today}"
+owner: captain-codex
+
+goal: >
+  Keep one durable task spine while allowing multiple bounded active lanes
+  with persistent lane memory.
+
+currentLanes:
+  mode: single_spine_multi_lane
+  captainRole: orchestrator
+  maxDirectCaptainLanes: 5
+  officerSplitRequired: false
+  swarmScoreGate:
+    minScore: 9
+    captainImplementationShareMax: 0.5
+    reviewWindowMinutes: 30
+    command: captain-os swarm-score
+    currentScore: null
+    currentVerdict: not_swarm
+  swarmCapacity:
+    maxOpenAgentThreads: 3
+    onThreadLimit: close_finished_lanes_then_retry
+    closeRequires:
+      - lane delta captured
+      - lane memory updated
+      - evidence refs attached or blocker recorded
+    lastThreadLimitAt: null
+    closeAgentsAttempted: false
+    retrySpawnScheduled: false
+  active:
+    - captain-orchestration
+
+deliveryCalibration:
+  projectStage: planning
+  outcomeUnit: bounded next delivery packet
+  deliveryShareTarget: 0.25
+  qualityShareTarget: 0.35
+  safetyShareTarget: 0.2
+  processBudgetMax: 0.45
+  maxPlanningOnlyCycles: 2
+  minClosedOutcomesPerCycle: 0
+  namedDeliverableRequired: false
+  gateCommand: captain-os delivery-calibration
+  currentVerdict: not_checked
+  blocks: []
+  nextAction: Name the next 1-3 deliverables/pages/cohorts before switching to delivery or launch_opening.
+  currentCycle:
+    id: bootstrap_planning_cycle
+    processShare: 0.35
+    deliveryShare: 0.25
+    qualityShare: 0.35
+    safetyShare: 0.2
+    namedDeliverables:
+      - bootstrap task spine
+    closedOutcomes: []
+    outcomeRows:
+      - target=bootstrap task spine;type=artifact;status=not_ready_with_exact_blocker;issueRefs=bootstrap;reportRefs=.captain-os/task-spine.yaml;owner=captain-codex;nextAction=choose first delivery packet
+    planningOnlyCycles: 0
+    falseGreenRisk: false
+    safetyEvidenceRefs: []
+    qualityEvidenceRefs:
+      - task spine bootstrap
+    ownerDecisionRequired: false
+    adjacentWorkActive: false
+    nextActionBound: true
+    reportingAttachedToOutcomes: true
+
+laneStates:
+  - laneId: captain-orchestration
+    title: Captain orchestration and synthesis
+    ownerRegistryId: captain-codex
+    runtimeId: codex
+    laneMode: persistent_owner
+    status: active
+    assignmentId: ASSIGN-BOOTSTRAP-CAPTAIN
+    heartbeatAt: "${today}"
+    staleAfterMinutes: 1440
+    allowedScope:
+      - .captain-os/**
+      - .ship/lab/runs/**
+    forbiddenScope:
+      - .env*
+      - secrets/**
+    locks: []
+    dependencies: []
+    conflictsWith: []
+    contextRefs:
+      - .captain-os/project.yaml
+      - .captain-os/runtime-adapters.yaml
+    contextBudgetRefs:
+      - captain-summary
+      - scoped-source-docs
+    laneMemoryRef: .captain-os/task-spine.yaml#laneMemory.captain-orchestration
+    acceptanceRows:
+      - Task has a declared execution model before Tier 2+ implementation.
+    evidenceOwed:
+      - Updated task spine and linked evidence refs.
+    evidenceRefs: []
+    lastDelta: ""
+    decisions: []
+    openQuestions: []
+    blockers: []
+    nextAction: Classify the next task and choose single_lane or parallel_lane_swarm.
+    closeoutCriteria:
+      - All lane deltas merged or explicitly rejected.
+      - Evidence refs attached for completed rows.
+    transferCriteria:
+      - New captain can continue from currentLanes, laneStates, and laneMemory.
+
+laneMemory:
+  captain-orchestration:
+    persistentSummary: Bootstrap lane for Captain orchestration and synthesis.
+    decisions: []
+    openQuestions: []
+    blockers: []
+    evidenceRefs: []
+    lastTouchedAt: "${today}"
+    continuationPrompt: Read this spine, then continue from laneStates[].nextAction.
+`;
+    writeFileSync(resolve(configDir, 'task-spine.yaml'), taskSpineContent, 'utf8');
+    console.log(`✅ Создан task spine с lane memory: .captain-os/task-spine.yaml`);
+
+    const ownerRegistryContent = `schemaVersion: captain-owner-registry.v1
+owners:
+  - ownerRegistryId: captain-codex
+    runtimeId: codex
+    role: primary_captain
+    lockIdentity: codex
+    canMutate: true
+    canFinalClaim: true
+  - ownerRegistryId: captain-claude
+    runtimeId: claude-code
+    role: peer_captain_or_read_only_reviewer
+    lockIdentity: claude-code
+    canMutate: packet_only
+    canFinalClaim: true
+  - ownerRegistryId: captain-gemini
+    runtimeId: gemini-coding
+    role: peer_captain_or_read_only_judge
+    lockIdentity: gemini-coding
+    canMutate: packet_only
+    canFinalClaim: true
+  - ownerRegistryId: starpom
+    runtimeId: process
+    role: quality_auditor
+    lockIdentity: starpom
+    canMutate: false
+    canFinalClaim: false
+`;
+    writeFileSync(resolve(configDir, 'owner-registry.yaml'), ownerRegistryContent, 'utf8');
+    console.log(`✅ Создан реестр владельцев: .captain-os/owner-registry.yaml`);
+
+    const lockfileContent = `{
+  "schemaVersion": "captain-os-lock.v1",
+  "captainOsVersion": "0.1.0-local-p11a",
+  "projectName": ${JSON.stringify(projectName)},
+  "createdAt": ${JSON.stringify(today)},
+  "globalBlockingEnabled": false,
+  "productAcceptedFullAllowed": false
+}
+`;
+    writeFileSync(resolve(configDir, '../.captain-os.lock.json'), lockfileContent, 'utf8');
+    console.log(`✅ Создан lockfile: .captain-os.lock.json`);
+
     // Генерация runtime-adapters.yaml с поддержкой всех указанных моделей
     let adaptersContent = `schemaVersion: captain-runtime-adapters.v1
 project: ${projectName}
@@ -267,6 +483,7 @@ adapters:
     instructionEntrypoint: GEMINI.md
     captainEligibility: dynamic
     defaultRole: captain_first
+    swarmRole: optional_judge_or_packeted_lane
     capabilities:
       readFiles: true
       writeFiles: true
@@ -289,6 +506,7 @@ adapters:
       contextRadius: supported
       finalClaimGate: supported
       evidenceAggregation: manual
+      agentLaneLifecycle: manual
 
 `;
     }
@@ -299,6 +517,7 @@ adapters:
     instructionEntrypoint: CLAUDE.md
     captainEligibility: dynamic
     defaultRole: captain_first
+    swarmRole: standing_review_lane
     capabilities:
       readFiles: true
       writeFiles: true
@@ -321,6 +540,7 @@ adapters:
       contextRadius: supported
       finalClaimGate: supported
       evidenceAggregation: manual
+      agentLaneLifecycle: handoff_required
 
 `;
     }
@@ -331,6 +551,7 @@ adapters:
     instructionEntrypoint: AGENTS.md
     captainEligibility: dynamic
     defaultRole: captain_first
+    swarmRole: orchestrator_and_integrator
     capabilities:
       readFiles: true
       writeFiles: true
@@ -353,6 +574,7 @@ adapters:
       contextRadius: supported
       finalClaimGate: supported
       evidenceAggregation: supported
+      agentLaneLifecycle: supported
 
 `;
     }
@@ -363,6 +585,7 @@ adapters:
     instructionEntrypoint: AGENTS.md
     captainEligibility: dynamic
     defaultRole: captain_first
+    swarmRole: orchestrator_and_integrator
     capabilities:
       readFiles: true
       writeFiles: true
@@ -385,6 +608,7 @@ adapters:
       contextRadius: supported
       finalClaimGate: supported
       evidenceAggregation: supported
+      agentLaneLifecycle: supported
 
 `;
     }

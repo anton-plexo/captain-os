@@ -26,14 +26,19 @@ Fixture families:
 
 - `high-anger/` - historical product/process failure fixtures used by P8.
 - `methodology/` - Diamond Protocol, research-to-execution, accepted-risk, and no-false-done continuation fixtures.
-- `operating-safety/` - P0 stop-and-answer, visible acceptance, span control, officer hierarchy, context budget, and clean-control fixtures.
+- `operating-safety/` - P0 stop-and-answer, visible acceptance, span control, officer hierarchy, context budget, operator-decision interrupt, SEO HTTP-200 parity, false-swarm, P11H swarm-score, and clean-control fixtures.
+- `delivery-calibration/` - live task-spine fixtures for P11K delivery-stage pass/fail behavior.
+- `operating-safety/false-parallelism-no-persistent-lanes.json` blocks batches that call themselves swarm development while using only sequential one-shot reviewers without lane memory.
+- `operating-safety/swarm-runtime-score-below-9.json` blocks swarm-labelled work below 9/10.
+- `operating-safety/operator-decision-required-adjacent-planning-continues.json` blocks production/indexing critical-path drift after owner decision becomes required.
+- `delivery-calibration/delivery-process-loop-fail.yaml` blocks delivery-stage process/report loops without named outcomes.
 
 Current basket:
 
 - 16 `high-anger` fixtures, including one low-risk control and 15 serious historical samples.
 - 13 `methodology` fixtures.
-- 7 `operating-safety` fixtures.
-- 36 fixtures in `captain:lab:smoke`.
+- 11 `operating-safety` fixtures.
+- 42 fixtures in `captain:lab:smoke`.
 
 Run:
 

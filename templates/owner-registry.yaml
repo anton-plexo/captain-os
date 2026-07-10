@@ -1,0 +1,26 @@
+schemaVersion: captain-owner-registry.v1
+owners:
+  - ownerRegistryId: captain-codex
+    runtimeId: codex
+    role: primary_captain
+    lockIdentity: codex
+    canMutate: true
+    canFinalClaim: true
+  - ownerRegistryId: captain-claude
+    runtimeId: claude-code
+    role: peer_captain_or_read_only_reviewer
+    lockIdentity: claude-code
+    canMutate: packet_only
+    canFinalClaim: true
+  - ownerRegistryId: captain-gemini
+    runtimeId: gemini-coding
+    role: peer_captain_or_read_only_judge
+    lockIdentity: gemini-coding
+    canMutate: packet_only
+    canFinalClaim: true
+  - ownerRegistryId: starpom
+    runtimeId: process
+    role: quality_auditor
+    lockIdentity: starpom
+    canMutate: false
+    canFinalClaim: false

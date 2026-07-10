@@ -216,7 +216,7 @@ function buildClosureMatrix(
   const blockedClaims = [...blockedChecklistClaims, ...acceptedRisk.blockingClaims]
 
   return {
-    closureStatus: !required ? 'ready_for_execution' : blockedClaims.length === 0 ? 'accepted_partial' : 'blocked',
+    closureStatus: !required ? 'ready_for_owner_review_planning_only' : blockedClaims.length === 0 ? 'accepted_partial' : 'blocked',
     claimBindings: checklists.items.map((item) => ({
       claimId: item.id,
       artifactRef: 'priority-checklists.json',

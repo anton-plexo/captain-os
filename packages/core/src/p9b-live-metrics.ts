@@ -532,7 +532,10 @@ function runAdvisoryVariant(
 }
 
 function machineOutcome(expectedBlocks: string[], variants: P9BRunVariantSummary[]): P9BTaskSummary['machineOutcome'] {
-  const blocked = variants.some((variant) => variant.decision !== 'ready_for_execution')
+  const blocked = variants.some((variant) => (
+    variant.decision !== 'ready_for_owner_review_planning_only' &&
+    variant.decision !== 'ready_for_execution'
+  ))
   if (expectedBlocks.length === 0) {
     return blocked ? 'potential_false_positive_needs_judge' : 'machine_true_pass_candidate'
   }
@@ -750,7 +753,8 @@ function main(): void {
 }
 
 function isDirectEntrypoint(fileName: string): boolean {
-  return (process.argv[1] ?? '').replace(/\\/g, '/').endsWith(`/scripts/captain-lab/${fileName}`)
+  const entrypoint = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return entrypoint.endsWith(`/packages/core/src/${fileName}`) || entrypoint.endsWith(`/scripts/captain-lab/${fileName}`)
 }
 
 if (isDirectEntrypoint('p9b-live-metrics.ts')) main()

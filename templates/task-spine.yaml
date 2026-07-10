@@ -1,0 +1,122 @@
+schemaVersion: captain-task-spine.v1
+spineId: HOST-PROJECT-SPINE
+status: active
+mode: shadow
+updatedAt: "<YYYY-MM-DD>"
+owner: captain-codex
+
+goal: >
+  Keep one durable task spine while allowing multiple bounded active lanes
+  with persistent lane memory.
+
+currentLanes:
+  mode: single_spine_multi_lane
+  captainRole: orchestrator
+  maxDirectCaptainLanes: 5
+  officerSplitRequired: false
+  swarmScoreGate:
+    minScore: 9
+    captainImplementationShareMax: 0.5
+    reviewWindowMinutes: 30
+    command: captain-os swarm-score
+    currentScore: null
+    currentVerdict: not_swarm
+  swarmCapacity:
+    maxOpenAgentThreads: 3
+    onThreadLimit: close_finished_lanes_then_retry
+    closeRequires:
+      - lane delta captured
+      - lane memory updated
+      - evidence refs attached or blocker recorded
+    lastThreadLimitAt: null
+    closeAgentsAttempted: false
+    retrySpawnScheduled: false
+  active:
+    - captain-orchestration
+
+deliveryCalibration:
+  projectStage: planning
+  outcomeUnit: bounded next delivery packet
+  deliveryShareTarget: 0.25
+  qualityShareTarget: 0.35
+  safetyShareTarget: 0.2
+  processBudgetMax: 0.45
+  maxPlanningOnlyCycles: 2
+  minClosedOutcomesPerCycle: 0
+  namedDeliverableRequired: false
+  gateCommand: captain-os delivery-calibration
+  currentVerdict: not_checked
+  blocks: []
+  nextAction: Name the next 1-3 deliverables/pages/cohorts before switching to delivery or launch_opening.
+  currentCycle:
+    id: bootstrap_planning_cycle
+    processShare: 0.35
+    deliveryShare: 0.25
+    qualityShare: 0.35
+    safetyShare: 0.2
+    namedDeliverables:
+      - bootstrap task spine
+    closedOutcomes: []
+    outcomeRows:
+      - target=bootstrap task spine;type=artifact;status=not_ready_with_exact_blocker;issueRefs=bootstrap;reportRefs=.captain-os/task-spine.yaml;owner=captain-codex;nextAction=choose first delivery packet
+    planningOnlyCycles: 0
+    falseGreenRisk: false
+    safetyEvidenceRefs: []
+    qualityEvidenceRefs:
+      - task spine bootstrap
+    ownerDecisionRequired: false
+    adjacentWorkActive: false
+    nextActionBound: true
+    reportingAttachedToOutcomes: true
+
+laneStates:
+  - laneId: captain-orchestration
+    title: Captain orchestration and synthesis
+    ownerRegistryId: captain-codex
+    runtimeId: codex
+    laneMode: persistent_owner
+    status: active
+    assignmentId: ASSIGN-BOOTSTRAP-CAPTAIN
+    heartbeatAt: "<YYYY-MM-DD>"
+    staleAfterMinutes: 1440
+    allowedScope:
+      - .captain-os/**
+      - .ship/lab/runs/**
+    forbiddenScope:
+      - .env*
+      - secrets/**
+    locks: []
+    dependencies: []
+    conflictsWith: []
+    contextRefs:
+      - .captain-os/project.yaml
+      - .captain-os/runtime-adapters.yaml
+    contextBudgetRefs:
+      - captain-summary
+      - scoped-source-docs
+    laneMemoryRef: .captain-os/task-spine.yaml#laneMemory.captain-orchestration
+    acceptanceRows:
+      - Task has a declared execution model before Tier 2+ implementation.
+    evidenceOwed:
+      - Updated task spine and linked evidence refs.
+    evidenceRefs: []
+    lastDelta: ""
+    decisions: []
+    openQuestions: []
+    blockers: []
+    nextAction: Classify the next task and choose single_lane or parallel_lane_swarm.
+    closeoutCriteria:
+      - All lane deltas merged or explicitly rejected.
+      - Evidence refs attached for completed rows.
+    transferCriteria:
+      - New captain can continue from currentLanes, laneStates, and laneMemory.
+
+laneMemory:
+  captain-orchestration:
+    persistentSummary: Bootstrap lane for Captain orchestration and synthesis.
+    decisions: []
+    openQuestions: []
+    blockers: []
+    evidenceRefs: []
+    lastTouchedAt: "<YYYY-MM-DD>"
+    continuationPrompt: Read this spine, then continue from laneStates[].nextAction.

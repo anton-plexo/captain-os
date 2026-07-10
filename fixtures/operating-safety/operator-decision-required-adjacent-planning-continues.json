@@ -1,0 +1,31 @@
+{
+  "id": "operator-decision-required-adjacent-planning-continues",
+  "title": "Operator decision required but adjacent planning continues",
+  "task": "SEO/indexing incident: original Anton goal was production/dev/prod/GSC/indexing visibility. Main blocker is status_200_false_green_raw_spa_shell_rendered_404_sitemap_excluded and status operator_decision_required_no_progress_bump, but Captain continues adjacent planning-only slices instead of stopping for owner choice.",
+  "sourceCase": "docs/protocols/operator-decision-interrupt.md#regression-fixture",
+  "tags": ["operating_safety", "seo", "production", "indexing", "incident_repair"],
+  "expected": {
+    "intentMode": "incident_repair",
+    "minComplexityTier": "T3",
+    "minPlanDepth": "D3",
+    "requiredBlocks": [
+      "operator_decision_required_interrupt",
+      "critical_path_vs_adjacent_work",
+      "blocked_but_continuing_budget",
+      "seo_http_200_false_green_parity_missing"
+    ],
+    "requiredSailors": ["Captain", "StarPom", "QA", "Runtime", "Shipping"]
+  },
+  "context": {
+    "mainGoalProductionOpeningIndexing": "true",
+    "operatorDecisionRequired": "true",
+    "criticalPathMovement": "adjacent_planning_only",
+    "adjacentPlanningContinues": "true",
+    "planningOnlyPacketsAfterBlocker": "5",
+    "hoursAfterBlocker": "29",
+    "http200Only": "true",
+    "missingRawRenderedCanonicalRobotsH1SitemapParity": "true",
+    "ownerChoices": "DPOH-A deploy repair|DPOH-B intentional hold",
+    "acceptanceObject": "Operator decision interrupt for production/indexing blocker"
+  }
+}

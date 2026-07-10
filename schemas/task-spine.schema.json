@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "captain-task-spine.schema.json",
+  "title": "Captain OS Task Spine",
+  "type": "object",
+  "required": ["schemaVersion", "spineId", "status", "mode", "updatedAt", "owner", "currentLanes", "laneStates", "laneMemory"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": "captain-task-spine.v1" },
+    "spineId": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["active", "paused", "blocked", "ready_for_pr", "closed"] },
+    "mode": { "type": "string", "enum": ["shadow", "advisory", "blocking_canary", "global_blocking"] },
+    "updatedAt": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string", "minLength": 1 },
+    "currentLanes": {
+      "type": "object",
+      "required": ["mode", "captainRole", "maxDirectCaptainLanes", "active"],
+      "additionalProperties": true,
+      "properties": {
+        "mode": { "const": "single_spine_multi_lane" },
+        "captainRole": { "type": "string", "enum": ["orchestrator", "orchestrator_and_worker"] },
+        "maxDirectCaptainLanes": { "type": "number", "minimum": 1 },
+        "officerSplitRequired": { "type": "boolean" },
+        "swarmScoreGate": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "minScore": { "type": "number", "minimum": 0, "maximum": 10 },
+            "captainImplementationShareMax": { "type": "number", "minimum": 0, "maximum": 1 },
+            "reviewWindowMinutes": { "type": "number", "minimum": 1 },
+            "command": { "type": "string", "minLength": 1 },
+            "currentScore": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+            "currentVerdict": { "type": "string", "enum": ["pass_9_of_10", "allowed_not_swarm", "fail_false_swarm", "not_swarm"] }
+          }
+        },
+        "swarmCapacity": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "maxOpenAgentThreads": { "type": "number", "minimum": 1 },
+            "onThreadLimit": { "type": "string", "enum": ["close_finished_lanes_then_retry", "downgrade_to_not_swarm", "operator_interrupt"] },
+            "closeRequires": { "type": "array", "items": { "type": "string" } },
+            "lastThreadLimitAt": { "type": ["string", "null"] },
+            "closeAgentsAttempted": { "type": "boolean" },
+            "retrySpawnScheduled": { "type": "boolean" }
+          }
+        },
+        "active": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "deliveryCalibration": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "projectStage": {
+          "type": "string",
+          "enum": ["discovery", "planning", "delivery", "launch_opening", "incident_repair", "maintenance"]
+        },
+        "outcomeUnit": { "type": "string", "minLength": 1 },
+        "deliveryShareTarget": { "type": "number", "minimum": 0, "maximum": 1 },
+        "qualityShareTarget": { "type": "number", "minimum": 0, "maximum": 1 },
+        "safetyShareTarget": { "type": "number", "minimum": 0, "maximum": 1 },
+        "processBudgetMax": { "type": "number", "minimum": 0, "maximum": 1 },
+        "maxPlanningOnlyCycles": { "type": "number", "minimum": 0 },
+        "minClosedOutcomesPerCycle": { "type": "number", "minimum": 0 },
+        "namedDeliverableRequired": { "type": "boolean" },
+        "gateCommand": { "type": "string", "minLength": 1 },
+        "currentVerdict": { "type": "string", "enum": ["pass_calibrated", "fail_recalibrate", "not_checked"] },
+        "blocks": { "type": "array", "items": { "type": "string" } },
+        "nextAction": { "type": "string" },
+        "currentCycle": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "processShare": { "type": "number", "minimum": 0, "maximum": 1 },
+            "deliveryShare": { "type": "number", "minimum": 0, "maximum": 1 },
+            "qualityShare": { "type": "number", "minimum": 0, "maximum": 1 },
+            "safetyShare": { "type": "number", "minimum": 0, "maximum": 1 },
+            "namedDeliverables": { "type": "array", "items": { "type": "string" } },
+            "namedOutcomes": { "type": "array", "items": { "type": "string" } },
+            "closedOutcomes": { "type": "array", "items": { "type": "string" } },
+            "outcomeRows": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {
+                      "target": { "type": "string" },
+                      "type": { "type": "string" },
+                      "status": {
+                        "type": "string",
+                        "enum": ["ready_with_evidence", "not_ready_with_exact_blocker", "blocked_owner_decision_required", "adjacent_planning_only"]
+                      },
+                      "issueRefs": { "type": "array", "items": { "type": "string" } },
+                      "reportRefs": { "type": "array", "items": { "type": "string" } },
+                      "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+                      "owner": { "type": "string" },
+                      "nextAction": { "type": "string" }
+                    }
+                  }
+                ]
+              }
+            },
+            "planningOnlyCycles": { "type": "number", "minimum": 0 },
+            "falseGreenRisk": { "type": "boolean" },
+            "safetyEvidence": { "type": "boolean" },
+            "safetyEvidenceRefs": { "type": "array", "items": { "type": "string" } },
+            "qualityEvidence": { "type": "boolean" },
+            "qualityEvidenceRefs": { "type": "array", "items": { "type": "string" } },
+            "ownerDecisionRequired": { "type": "boolean" },
+            "adjacentWorkActive": { "type": "boolean" },
+            "nextAction": { "type": "string" },
+            "nextActionBound": { "type": "boolean" },
+            "reportingAttachedToOutcomes": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "laneStates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["laneId", "ownerRegistryId", "runtimeId", "laneMode", "status", "assignmentId", "laneMemoryRef", "evidenceOwed", "nextAction", "closeoutCriteria"],
+        "additionalProperties": true,
+        "properties": {
+          "laneId": { "type": "string", "minLength": 1 },
+          "title": { "type": "string" },
+          "ownerRegistryId": { "type": "string", "minLength": 1 },
+          "runtimeId": { "type": "string", "minLength": 1 },
+          "laneMode": { "type": "string", "enum": ["persistent_owner", "one_shot_reviewer", "read_only_judge", "temporary_contractor", "standing_review"] },
+          "status": { "type": "string", "enum": ["queued", "active", "blocked", "review", "merged", "closed", "stale"] },
+          "assignmentId": { "type": "string", "minLength": 1 },
+          "heartbeatAt": { "type": "string" },
+          "staleAfterMinutes": { "type": "number", "minimum": 1 },
+          "allowedScope": { "type": "array", "items": { "type": "string" } },
+          "forbiddenScope": { "type": "array", "items": { "type": "string" } },
+          "locks": { "type": "array", "items": { "type": "string" } },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "conflictsWith": { "type": "array", "items": { "type": "string" } },
+          "contextRefs": { "type": "array", "items": { "type": "string" } },
+          "contextBudgetRefs": { "type": "array", "items": { "type": "string" } },
+          "laneMemoryRef": { "type": "string", "minLength": 1 },
+          "acceptanceRows": { "type": "array", "items": { "type": "string" } },
+          "evidenceOwed": { "type": "array", "items": { "type": "string" } },
+          "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+          "lastDelta": { "type": "string" },
+          "decisions": { "type": "array", "items": { "type": "string" } },
+          "openQuestions": { "type": "array", "items": { "type": "string" } },
+          "blockers": { "type": "array", "items": { "type": "string" } },
+          "nextAction": { "type": "string", "minLength": 1 },
+          "closeoutCriteria": { "type": "array", "items": { "type": "string" } },
+          "transferCriteria": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "laneMemory": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

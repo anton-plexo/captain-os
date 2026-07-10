@@ -92,6 +92,13 @@ Captain-only reason:
 - directQuestionDetected: ${operatingSafety.directQuestionDetected}
 - answerRequiredBeforeAction: ${operatingSafety.answerRequiredBeforeAction}
 - angerIncidentMode: ${operatingSafety.angerIncidentMode}
+- productionOpeningGoalDetected: ${operatingSafety.productionOpeningGoalDetected}
+- operatorDecisionRequired: ${operatingSafety.operatorDecisionRequired}
+- criticalPathMovement: ${operatingSafety.criticalPathMovement}
+- adjacentPlanningSlicesAfterBlocker: ${operatingSafety.adjacentPlanningSlicesAfterBlocker}
+- hoursAfterBlocker: ${operatingSafety.hoursAfterBlocker}
+- seoHttp200OnlySignal: ${operatingSafety.seoHttp200OnlySignal}
+- seoParityMissing: ${operatingSafety.seoParityMissing}
 - activeRowCount: ${operatingSafety.activeRowCount}
 - spanOfControlViolation: ${operatingSafety.spanOfControlViolation}
 - officerHierarchyRequired: ${operatingSafety.officerHierarchyRequired}

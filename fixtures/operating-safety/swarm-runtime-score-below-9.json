@@ -1,0 +1,40 @@
+{
+  "id": "swarm-runtime-score-below-9",
+  "title": "Swarm-labelled work below 9/10",
+  "task": "Captain calls this a live SEO swarm, but Captain implemented most of the work, only one non-review critical-path lane has a fresh artifact, Claude and StarPom are stale, the next packet is planning-only, and opening/indexing evidence is missing.",
+  "sourceCase": "docs/protocols/swarm-development-runtime.md#swarm-9-10-runtime-gate",
+  "tags": ["operating_safety", "captain_os_runtime", "swarm_runtime", "seo"],
+  "expected": {
+    "intentMode": "system_refactor",
+    "minComplexityTier": "T3",
+    "minPlanDepth": "D3",
+    "requiredBlocks": [
+      "swarm_runtime_score_below_9",
+      "captain_implementation_share_too_high",
+      "insufficient_productive_critical_lanes",
+      "missing_claude_review_lane",
+      "missing_starpom_lane",
+      "next_packet_not_bound",
+      "span_of_control_over_five",
+      "opening_indexing_evidence_missing"
+    ],
+    "requiredSailors": ["Captain", "Runtime", "QA", "StarPom"]
+  },
+  "context": {
+    "claimedSwarm": "true",
+    "p11hSwarmScoreGate": "true",
+    "swarmRuntimeScore": "6.5",
+    "captainImplementationShare": "0.7",
+    "productiveCriticalLaneArtifacts": "1",
+    "freshLaneOutputs": "2",
+    "freshClaudeReviewLane": "false",
+    "freshStarPomLane": "false",
+    "prBound": "true",
+    "activeLaneCount": "6",
+    "officerSplit": "false",
+    "nextPacketState": "text_only",
+    "productionOpeningGoal": "true",
+    "openingIndexingEvidenceLaneProof": "false",
+    "acceptanceObject": "P11H 9/10 swarm runtime score"
+  }
+}

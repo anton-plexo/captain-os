@@ -1,5 +1,6 @@
 import type {
   ContextBudgetRow,
+  CriticalPathMovement,
   LabInput,
   OfficerLane,
   OperatingSafetyArtifact,
@@ -30,6 +31,18 @@ function splitList(value: string | undefined): string[] {
 
 function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(text))
+}
+
+function criticalPathMovementFrom(value: string | undefined): CriticalPathMovement {
+  const normalized = (value ?? '').trim()
+  const allowed: CriticalPathMovement[] = [
+    'moves_original_goal',
+    'adjacent_planning_only',
+    'evidence_only',
+    'blocked_waiting_owner',
+    'unknown',
+  ]
+  return allowed.includes(normalized as CriticalPathMovement) ? normalized as CriticalPathMovement : 'unknown'
 }
 
 function sailorFrom(value: string | undefined, fallback: Sailor): Sailor {
@@ -198,6 +211,80 @@ export function buildOperatingSafety(input: LabInput): OperatingSafetyArtifact {
   const contextBudgetViolations = contextBudgetRows.filter((row) => row.violation).map((row) => row.laneId)
   const requestResultMismatch = bool(input.context.userRequestResultMismatch) ||
     Boolean(input.context.userInspectionObject && input.context.agentAcceptanceObject && input.context.userInspectionObject !== input.context.agentAcceptanceObject)
+  const productionOpeningGoalDetected = bool(input.context.productionOpeningGoal) ||
+    bool(input.context.mainGoalProductionOpeningIndexing) ||
+    hasAny(text, [
+      /production|prod\b|deploy|opening|indexing|indexed|crawlable|crawler|google|gsc|search console|rampify|sitemap/,
+      /продакшн|депло[йя]|индексац|индексир|гугл|кроул|sitemap|карта сайта/,
+    ])
+  const operatorDecisionRequired = bool(input.context.operatorDecisionRequired) ||
+    hasAny(text, [
+      /operator_decision_required/,
+      /owner decision required/,
+      /operator decision required/,
+      /decision required/,
+      /anton.*choose|choose.*anton/,
+      /нуж(ен|на).*выбор.*(anton|антон|owner|operator|оператор)/,
+      /решени[ея].*(anton|антон|owner|operator|оператор)/,
+    ])
+  const ownerChoices = splitList(input.context.ownerChoices)
+  const criticalPathMovement = criticalPathMovementFrom(input.context.criticalPathMovement)
+  const adjacentPlanningSlicesAfterBlocker = numberValue(input.context.adjacentPlanningSlicesAfterBlocker ?? input.context.planningOnlyPacketsAfterBlocker) ?? 0
+  const hoursAfterBlocker = numberValue(input.context.hoursAfterBlocker) ?? 0
+  const adjacentPlanningContinues = bool(input.context.adjacentPlanningContinues) ||
+    criticalPathMovement === 'adjacent_planning_only' ||
+    criticalPathMovement === 'evidence_only'
+  const timeboxedBypassRequested = bool(input.context.timeboxedBypassRequested)
+  const explicitTimeboxedBypass = timeboxedBypassRequested && bool(input.context.ownerVisibleWarning)
+  const seoHttp200OnlySignal = bool(input.context.http200Only) ||
+    hasAny(text, [
+      /http\s*200.*(success|green|ready|pass|ок|успех)/,
+      /status_200_false_green/,
+      /200.*false[-_ ]green/,
+    ])
+  const seoParityPresent = bool(input.context.rawRenderedCanonicalRobotsH1SitemapParity) ||
+    (
+      bool(input.context.rawHtmlProof) &&
+      bool(input.context.renderedHtmlProof) &&
+      bool(input.context.canonicalProof) &&
+      bool(input.context.robotsProof) &&
+      bool(input.context.h1Proof) &&
+      bool(input.context.sitemapProof)
+    )
+  const seoParityMissing = bool(input.context.missingRawRenderedCanonicalRobotsH1SitemapParity) ||
+    (seoHttp200OnlySignal && !seoParityPresent)
+  const claimedSwarm = bool(input.context.claimedSwarm) || hasAny(text, [/swarm|parallel lane|parallel work|multi[- ]lane|роев|параллель/])
+  const swarmRuntimeScore = numberValue(input.context.swarmRuntimeScore ?? input.context.swarmScore)
+  const captainImplementationShare = numberValue(input.context.captainImplementationShare)
+  const productiveCriticalLaneArtifacts = numberValue(input.context.productiveCriticalLaneArtifacts ?? input.context.activeNonReviewCriticalLaneArtifacts)
+  const freshLaneOutputs = numberValue(input.context.freshLaneOutputs)
+  const activeLaneCount = numberValue(input.context.activeLaneCount)
+  const nextPacketState = (input.context.nextPacketState ?? '').trim() || null
+  const freshClaudeReviewLane = bool(input.context.freshClaudeReviewLane) || bool(input.context.claudeReviewFresh)
+  const freshStarPomLane = bool(input.context.freshStarPomLane) || bool(input.context.starpomFresh)
+  const prBoundSwarm = bool(input.context.prBound) || bool(input.context.prBoundSwarm) || hasAny(text, [/pr[- ]?bound|pull request|ready_for_pr|ready for pr/])
+  const officerSplitPresent = officerHierarchyPresent || bool(input.context.officerSplit) || bool(input.context.officerSplitPresent)
+  const openingIndexingEvidenceLaneProof = bool(input.context.openingIndexingEvidenceLaneProof) ||
+    bool(input.context.exactOpeningEvidenceLane) ||
+    seoParityPresent
+  const p11hScoreGateActive = bool(input.context.p11hSwarmScoreGate) ||
+    bool(input.context.enforceSwarmScore) ||
+    swarmRuntimeScore !== null ||
+    captainImplementationShare !== null ||
+    productiveCriticalLaneArtifacts !== null ||
+    freshLaneOutputs !== null ||
+    activeLaneCount !== null ||
+    nextPacketState !== null
+  const oneShotReviewersOnly = bool(input.context.oneShotReviewersOnly)
+  const missingLaneMemory = bool(input.context.missingLaneMemory)
+  const sequentialAgentWait = bool(input.context.sequentialAgentWait)
+  const captainAsPrimaryWorker = bool(input.context.captainAsPrimaryWorker)
+  const falseParallelismNoPersistentLanes = claimedSwarm && (
+    oneShotReviewersOnly ||
+    missingLaneMemory ||
+    sequentialAgentWait ||
+    captainAsPrimaryWorker
+  )
   const blocks: string[] = []
 
   if (answerRequiredBeforeAction) blocks.push('stop_and_answer_required')
@@ -207,11 +294,56 @@ export function buildOperatingSafety(input: LabInput): OperatingSafetyArtifact {
   if (spanOfControlViolation) blocks.push('span_of_control_violation')
   if (officerHierarchyRequired && !officerHierarchyPresent) blocks.push('officer_hierarchy_missing')
   if (contextBudgetViolations.length > 0) blocks.push('context_budget_violation')
+  if (productionOpeningGoalDetected && operatorDecisionRequired) blocks.push('operator_decision_required_interrupt')
+  if (operatorDecisionRequired && (
+    criticalPathMovement === 'unknown' ||
+    adjacentPlanningContinues ||
+    (adjacentPlanningSlicesAfterBlocker > 0 && criticalPathMovement !== 'moves_original_goal')
+  )) {
+    blocks.push('critical_path_vs_adjacent_work')
+  }
+  if (operatorDecisionRequired && !explicitTimeboxedBypass && (adjacentPlanningSlicesAfterBlocker > 2 || hoursAfterBlocker > 2)) {
+    blocks.push('blocked_but_continuing_budget')
+  }
+  if (productionOpeningGoalDetected && seoHttp200OnlySignal && seoParityMissing) blocks.push('seo_http_200_false_green_parity_missing')
+  if (falseParallelismNoPersistentLanes) blocks.push('false_parallelism_no_persistent_lanes')
+  if (claimedSwarm && missingLaneMemory) blocks.push('lane_memory_missing')
+  if (claimedSwarm && p11hScoreGateActive && swarmRuntimeScore !== null && swarmRuntimeScore < 9) blocks.push('swarm_runtime_score_below_9')
+  if (claimedSwarm && p11hScoreGateActive && captainImplementationShare !== null && captainImplementationShare > 0.5) blocks.push('captain_implementation_share_too_high')
+  if (claimedSwarm && p11hScoreGateActive && productiveCriticalLaneArtifacts !== null && productiveCriticalLaneArtifacts < 2) blocks.push('insufficient_productive_critical_lanes')
+  if (claimedSwarm && p11hScoreGateActive && freshLaneOutputs !== null && freshLaneOutputs === 0) blocks.push('no_fresh_lane_output')
+  if (claimedSwarm && p11hScoreGateActive && prBoundSwarm && !freshClaudeReviewLane) blocks.push('missing_claude_review_lane')
+  if (claimedSwarm && p11hScoreGateActive && !freshStarPomLane) blocks.push('missing_starpom_lane')
+  if (claimedSwarm && p11hScoreGateActive && nextPacketState !== null && !['started', 'scheduled'].includes(nextPacketState)) blocks.push('next_packet_not_bound')
+  if (claimedSwarm && p11hScoreGateActive && activeLaneCount !== null && activeLaneCount > 5 && !officerSplitPresent) blocks.push('span_of_control_over_five')
+  if (claimedSwarm && p11hScoreGateActive && criticalPathMovement === 'adjacent_planning_only' && bool(input.context.criticalPathIdle)) blocks.push('adjacent_work_over_idle_critical_path')
+  if (claimedSwarm && p11hScoreGateActive && productionOpeningGoalDetected && !openingIndexingEvidenceLaneProof) blocks.push('opening_indexing_evidence_missing')
+
+  const operatorChoicesText = ownerChoices.length >= 2 && ownerChoices.length <= 3
+    ? ` Choices: ${ownerChoices.join(' | ')}.`
+    : ' Name exactly 2-3 owner choices before any continuation.'
 
   return {
     directQuestionDetected,
     answerRequiredBeforeAction,
     angerIncidentMode,
+    productionOpeningGoalDetected,
+    operatorDecisionRequired,
+    ownerChoices,
+    criticalPathMovement,
+    adjacentPlanningSlicesAfterBlocker,
+    hoursAfterBlocker,
+    timeboxedBypassRequested,
+    seoHttp200OnlySignal,
+    seoParityMissing,
+    claimedSwarm,
+    p11hScoreGateActive,
+    swarmRuntimeScore,
+    captainImplementationShare,
+    productiveCriticalLaneArtifacts,
+    freshLaneOutputs,
+    activeLaneCount,
+    nextPacketState,
     userIntentRows,
     visualAcceptanceRows,
     missingVisibleObjects,
@@ -226,6 +358,14 @@ export function buildOperatingSafety(input: LabInput): OperatingSafetyArtifact {
     blocks: [...new Set(blocks)],
     nextAction: answerRequiredBeforeAction
       ? 'Answer the direct user question first; no edits, tool calls, or repair execution until the answer exists.'
+      : blocks.includes('operator_decision_required_interrupt')
+        ? `Stop the critical path and request an Anton/operator decision before adjacent planning continues.${operatorChoicesText}`
+      : blocks.includes('blocked_but_continuing_budget')
+        ? 'StarPom red flag: more than two planning-only packets or more than two hours elapsed after a major blocker without owner decision.'
+      : blocks.includes('seo_http_200_false_green_parity_missing')
+        ? 'Do not count HTTP 200 as SEO/prod success; collect raw/rendered/canonical/robots/H1/sitemap parity evidence.'
+      : blocks.includes('swarm_runtime_score_below_9')
+        ? 'Downgrade swarm claim or repair the packet until the P11H swarm runtime score is at least 9/10.'
       : blocks.length > 0
         ? 'Resolve operating-safety blocks before StarPom/final claim.'
         : 'Operating safety has no P0 blocks.',

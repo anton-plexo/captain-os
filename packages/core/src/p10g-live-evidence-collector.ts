@@ -576,7 +576,8 @@ function main(): void {
 }
 
 function isDirectEntrypoint(fileName: string): boolean {
-  return (process.argv[1] ?? '').replace(/\\/g, '/').endsWith(`/scripts/captain-lab/${fileName}`)
+  const entrypoint = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return entrypoint.endsWith(`/packages/core/src/${fileName}`) || entrypoint.endsWith(`/scripts/captain-lab/${fileName}`)
 }
 
 if (isDirectEntrypoint('p10g-live-evidence-collector.ts')) main()

@@ -13,6 +13,9 @@
 - [🏎️ Как это устроено: Понятная концепция за 1 минуту (Автомобильная аналогия)](#️-как-это-устроено-понятная-концепция-за-1-минуту-автомобильная-аналогия)
 - [🗺️ Техническая Архитектура & Компоненты (Core Architecture)](#️-техническая-архитектура--компоненты-core-architecture)
 - [🔄 Сквозной поток данных: Синергия факторов (Closed-Loop Data Pipeline)](#-сквозной-поток-данных-синергия-факторов-closed-loop-data-pipeline)
+- [🐝 Swarm Development Runtime](#-swarm-development-runtime)
+- [⚖️ Delivery Calibration Runtime](#️-delivery-calibration-runtime)
+- [🛑 Operator Decision Interrupt](#-operator-decision-interrupt)
 - [🌊 Жизненный цикл изменений & 13 Гейтов Качества (Quality Gates Workflow)](#-жизненный-цикл-изменений--13-гейтов-качества-quality-gates-workflow)
 - [⚙️ Интерактивная кастомизация и Prompt-опросник (Customization Protocol)](#️-интерактивная-кастомизация-и-prompt-опросник-customization-protocol)
 - [🧠 Dynamic Captain Mode (Динамический выбор Капитана)](#-dynamic-captain-mode-динамический-выбор-капитана)
@@ -218,6 +221,80 @@ graph TD
 3. **Splash & Blast Radius**: Четко очерчивает границы изменений. Splash Radius — это файлы, которые мы редактируем непосредственно (`[NEW]` / `[MODIFY]`). Blast Radius — файлы, которые могут пострадать косвенно. Это локализует диффы.
 4. **Git-Issues**: Убирает необходимость во внешних тяжелых трекерах. Вся история, требования и изменения живут прямо в репозитории, в ветках вида `task/REPAIR-ID`.
 5. **Реестр ремонта (`repair-ledger.json`)**: Фиксирует телеметрию изменений (Compression Ratio, спасенные строки, результаты тестов), формируя долгосрочную память системы.
+
+## 🐝 Swarm Development Runtime
+
+Captain OS does not define swarm work as "many agents in a list". It defines it as one task spine with multiple bounded active lanes.
+
+For Tier 2+ work, the active Captain must choose:
+
+- `single_lane` when the next action is genuinely blocking or cannot be split safely;
+- `parallel_lane_swarm` when independent execution, research, review, or evidence lanes can advance at the same time.
+
+In `parallel_lane_swarm`, Captain is the orchestrator by default. Sailors execute packeted lanes, Claude Code acts as a standing review lane when the host SLA triggers it, and StarPom audits process/evidence before final claims. Each active lane needs a packet, assignment id, disjoint scope, lane memory reference, heartbeat/staleness rule, evidence owed, closeout criteria, and stop conditions.
+
+Swarm-labelled work must score at least 9/10. Captain implementation share must
+stay at or below 50%, at least two fresh non-review critical-path lane artifacts
+must exist, Claude Code and StarPom must be fresh when required, and text-only
+planning cannot be reported as execution. Run the portable gate:
+
+```bash
+captain-os swarm-score
+```
+
+Portable protocol: `docs/protocols/swarm-development-runtime.md`.
+Portable spine contract: `docs/task-spine-contract.md`.
+
+### P11L Agent Lane Lifecycle
+
+When the host runtime reports `agent thread limit reached`, Captain must
+preserve lane memory before recycling capacity. Generate the bounded corrective
+packet with:
+
+```bash
+captain-os agent-lane-lifecycle --outcomes /data/map,/data/smart-money --pr "#681"
+```
+
+The packet requires closeout deltas, lane memory updates, close/archive of
+finished threads, retry spawn, and outcome-bound issue/report evidence.
+
+Portable protocol: `docs/protocols/agent-lane-lifecycle.md`.
+
+## ⚖️ Delivery Calibration Runtime
+
+Captain OS changes its delivery/quality/safety/process ratio by project stage.
+Discovery and planning may spend more budget on learning and acceptance, but
+delivery and launch/opening cycles must close named outcomes.
+
+Delivery progress is one of:
+
+- `ready_with_evidence`;
+- `not_ready_with_exact_blocker`;
+- `blocked_owner_decision_required`.
+
+Phase reports, acceptance matrices, and process artifacts count only when they
+directly unblock a named deliverable, page, URL cohort, or blocker in the current
+board. Run the portable gate:
+
+```bash
+captain-os delivery-calibration
+```
+
+When `.captain-os/task-spine.yaml` exists, the gate reads
+`deliveryCalibration.currentCycle` from that spine. Use `--fixtures` only for
+core regression simulations.
+
+Portable protocol: `docs/protocols/delivery-calibration.md`.
+
+## 🛑 Operator Decision Interrupt
+
+When the original goal is production/opening/indexing/deploy visibility, a blocker that requires owner choice stops the critical path. Captain must name exactly 2-3 owner choices and must not continue adjacent planning by default.
+
+Every next packet must say whether it moves the original goal or only adjacent planning/evidence, and how many adjacent slices already happened after the blocker.
+
+For SEO/prod work, HTTP 200 is transport evidence only. It is never success without raw/rendered/canonical/robots/H1/sitemap parity.
+
+Portable protocol: `docs/protocols/operator-decision-interrupt.md`.
 
 ---
 

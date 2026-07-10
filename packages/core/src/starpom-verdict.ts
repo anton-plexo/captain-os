@@ -27,7 +27,7 @@ export function buildStarPomVerdict(
       acceptedRisks: [],
       finalClaimAllowed: false,
       productClosureAllowed: false,
-      specPackageClosureStatus: 'ready_for_execution',
+      specPackageClosureStatus: 'blocked',
       productClosureStatus: 'blocked',
     }
   }
@@ -42,7 +42,7 @@ export function buildStarPomVerdict(
     acceptedRisks: [],
     finalClaimAllowed,
     productClosureAllowed: false,
-    specPackageClosureStatus: 'ready_for_execution',
+    specPackageClosureStatus: 'ready_for_owner_review_planning_only',
     productClosureStatus: 'not_evaluated',
   }
 }
@@ -50,4 +50,3 @@ export function buildStarPomVerdict(
 export function starpomExitCode(verdict: StarPomVerdictArtifact): number {
   return verdict.verdict === 'blocked' || verdict.verdict === 'fail' ? 2 : 0
 }
-

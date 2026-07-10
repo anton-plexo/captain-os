@@ -43,6 +43,13 @@ function decisionFor(
   const evidenceAggregationBlocks = artifacts.evidenceAggregation.blocks
 
   if (operatingSafetyBlocks.length > 0) {
+    if (operatingSafetyBlocks.includes('operator_decision_required_interrupt')) {
+      return {
+        decision: 'operator_decision_required',
+        reason: 'Original goal is blocked on Anton/operator decision; adjacent planning is not default progress.',
+        nextAction: artifacts.operatingSafety.nextAction,
+      }
+    }
     return {
       decision: 'blocked_external',
       reason: artifacts.operatingSafety.answerRequiredBeforeAction
@@ -111,9 +118,9 @@ function decisionFor(
   }
 
   return {
-    decision: 'ready_for_execution',
-    reason: 'No blocking advisory rows remain in this shadow/advisory run.',
-    nextAction: 'Proceed with implementation or next gate, while preserving final-claim evidence requirements.',
+    decision: 'ready_for_owner_review_planning_only',
+    reason: 'No blocking advisory rows remain, but no scoped supersession/execution authority was attached.',
+    nextAction: 'Present the planning-only packet for owner review before execution or attach a scoped supersession record.',
   }
 }
 
@@ -299,10 +306,14 @@ export function buildExecutionStateMachine(
     },
     {
       id: 'next_packet',
-      status: decision === 'ready_for_execution' ? 'pass' : decision === 'blocked_external' ? 'blocked' : 'pending',
+      status: decision === 'ready_for_execution'
+        ? 'pass'
+        : decision === 'blocked_external' || decision === 'operator_decision_required'
+          ? 'blocked'
+          : 'pending',
       owner: 'Shipping',
       artifacts: ['captain-synthesis.md'],
-      blockers: decision === 'ready_for_execution' ? [] : unique([
+      blockers: decision === 'ready_for_execution' || decision === 'ready_for_owner_review_planning_only' ? [] : unique([
         ...operatingSafetyBlocks,
         ...contextRuntimeBlocks,
         ...splashRadiusBlocks,
@@ -404,8 +415,10 @@ export function buildAdvisoryReport(
     blocking: false,
     stateMachine,
     metrics,
-    message: stateMachine.decision === 'ready_for_execution'
-      ? 'Advisory run found no blocking guidance; this does not grant product accepted_full.'
+    message: stateMachine.decision === 'ready_for_owner_review_planning_only'
+      ? 'Advisory run found no blocking guidance; packet is ready for owner review only, not execution authority.'
+      : stateMachine.decision === 'ready_for_execution'
+        ? 'Advisory run found scoped execution authority; this still does not grant product accepted_full.'
       : `Advisory recommends ${stateMachine.decision}: ${stateMachine.requiredNextAction}`,
   }
 }

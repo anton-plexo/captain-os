@@ -1,0 +1,56 @@
+schemaVersion: captain-task-spine.v1
+spineId: FIXTURE-DELIVERY-DETACHED-ISSUE-REPORTING
+status: active
+mode: shadow
+updatedAt: "2026-06-08"
+owner: captain-codex
+
+currentLanes:
+  mode: single_spine_multi_lane
+  captainRole: orchestrator
+  maxDirectCaptainLanes: 5
+  officerSplitRequired: false
+  active:
+    - captain-orchestration
+
+deliveryCalibration:
+  projectStage: delivery
+  outcomeUnit: named page/cohort closed with evidence
+  deliveryShareTarget: 0.5
+  qualityShareTarget: 0.25
+  safetyShareTarget: 0.15
+  processBudgetMax: 0.25
+  maxPlanningOnlyCycles: 1
+  minClosedOutcomesPerCycle: 1
+  namedDeliverableRequired: true
+  gateCommand: captain-os delivery-calibration
+  currentVerdict: not_checked
+  blocks: []
+  nextAction: Attach reporting to exact URL/cohort outcome rows.
+  currentCycle:
+    id: fixture_delivery_detached_issue_reporting_fail
+    processShare: 0.24
+    deliveryShare: 0.52
+    qualityShare: 0.28
+    safetyShare: 0.18
+    namedDeliverables:
+      - /markets/stablecoin-supply
+      - /markets/stablecoin-velocity
+    closedOutcomes:
+      - detached SEO status report says both pages are done
+    outcomeRows:
+      - target=/markets/stablecoin-supply;type=url;status=ready_with_evidence;reportRefs=.brain/reports/seo/status.md;owner=captain-codex;nextAction=attach issue and evidence refs
+      - target=/markets/stablecoin-velocity;type=url;status=ready_with_evidence;reportRefs=.brain/reports/seo/status.md;owner=captain-codex;nextAction=attach issue and evidence refs
+    planningOnlyCycles: 0
+    falseGreenRisk: false
+    safetyEvidenceRefs:
+      - non-prod fixture
+    qualityEvidenceRefs:
+      - non-prod fixture
+    ownerDecisionRequired: false
+    adjacentWorkActive: false
+    nextActionBound: true
+    reportingAttachedToOutcomes: false
+
+laneStates: []
+laneMemory: {}

@@ -7,6 +7,51 @@ paths:
   labRuns: .ship/lab/runs
   brain: .brain
   processDocs: docs/process
+swarmRuntime:
+  defaultExecutionModel: parallel_lane_swarm
+  captainRole: orchestrator
+  laneMemory: required_for_tier2_plus
+  scoreGate:
+    minScore: 9
+    captainImplementationShareMax: 0.5
+    reviewWindowMinutes: 30
+    command: captain-os swarm-score
+  activeLaneTarget:
+    min: 2
+    max: 4
+  maxCaptainChildren: 5
+  standingReviewLane: claude-code
+  starpomLane: required_before_final_claim
+operatorDecisionInterrupt:
+  protocol: docs/protocols/operator-decision-interrupt.md
+  appliesTo:
+    - production
+    - opening
+    - indexing
+    - deploy
+    - gsc
+    - sitemap
+    - crawler_visibility
+  ownerChoicesRequired:
+    min: 2
+    max: 3
+  defaultOnBlocker: blocked_waiting_owner
+  adjacentPlanningDefaultAllowed: false
+  adjacentPlanningBypass:
+    requiresOwnerApproval: true
+    requiresTimebox: true
+    requiresVisibleWarning: true
+  blockedButContinuingBudget:
+    maxPlanningOnlyPackets: 2
+    maxHoursWithoutOwnerDecision: 2
+  seoProductionSuccessEvidence:
+    - raw_html
+    - rendered_html
+    - canonical
+    - robots
+    - h1
+    - sitemap
+  http200SuccessAllowed: false
 evidencePolicy:
   writeArtifactsToProject: true
   writeArtifactsToOsRepo: false

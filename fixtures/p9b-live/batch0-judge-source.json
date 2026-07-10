@@ -64,7 +64,7 @@
         { "taskId": "p9b-010-internal-route-access-proof", "humanOutcomeLabel": "false_negative", "severity": "P0", "reason": "Original runtime missed explicit public-host negative-proof validator and underplayed security incident semantics.", "scores": { "runtimeCorrectness": 2 }, "newFixtureNeeded": true },
         { "taskId": "p9b-013-data-canonical-null-visibility", "humanOutcomeLabel": "false_negative", "severity": "P0", "reason": "Original runtime blocked on irrelevant prior-baseline row, not canonical NULL query proof plus public negative proof.", "scores": { "runtimeCorrectness": 2 }, "newFixtureNeeded": true },
         { "taskId": "p9b-014-parser-source-metadata-proof", "humanOutcomeLabel": "false_negative", "severity": "P0", "reason": "Original runtime missed source metadata, freshness, and run-log semantics.", "scores": { "runtimeCorrectness": 2 }, "newFixtureNeeded": true },
-        { "taskId": "p9b-025-clean-success-control", "humanOutcomeLabel": "true_pass", "severity": "P3", "reason": "Clean control reaches ready_for_execution; minor crew over-selection is a burden issue, not a blocker.", "scores": { "runtimeCorrectness": 4 }, "burden": { "operatorMinutesAdded": 1, "artifactCount": 1, "burdenLevel": "low" } }
+        { "taskId": "p9b-025-clean-success-control", "humanOutcomeLabel": "true_pass", "severity": "P3", "reason": "Clean control reaches ready_for_owner_review_planning_only; minor crew over-selection is a burden issue, not a blocker.", "scores": { "runtimeCorrectness": 4 }, "burden": { "operatorMinutesAdded": 1, "artifactCount": 1, "burdenLevel": "low" } }
       ]
     },
     {

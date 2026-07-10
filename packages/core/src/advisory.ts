@@ -5,7 +5,6 @@ import {
   timestampRunId,
   writeJson,
 } from './io'
-import { compileArtifactSpec } from './artifact-compiler'
 import { runLab } from './ship'
 import { buildAdvisoryReport } from './execution-state-machine'
 import type { LabMode } from './schema'
@@ -44,7 +43,7 @@ function parseArgs(argv: string[]): CliOptions {
   return options
 }
 
-function main(): void {
+async function main(): Promise<void> {
   try {
     const options = parseArgs(process.argv.slice(2))
     const primaryInputProvided = Boolean(options.fixture || options.task || options.promptFile || options.issue)
@@ -60,7 +59,7 @@ function main(): void {
       out,
     })
     const compiledSpec = options.spec
-      ? compileArtifactSpec({
+      ? (await import('./artifact-compiler')).compileArtifactSpec({
         spec: options.spec,
         out: `${artifacts.run.outDir}/executable-spec`,
       })
@@ -114,7 +113,10 @@ function main(): void {
 }
 
 function isDirectEntrypoint(fileName: string): boolean {
-  return (process.argv[1] ?? '').replace(/\\/g, '/').endsWith(`/scripts/captain-lab/${fileName}`)
+  const entrypoint = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return entrypoint.endsWith(`/packages/core/src/${fileName}`) || entrypoint.endsWith(`/scripts/captain-lab/${fileName}`)
 }
 
-if (isDirectEntrypoint('advisory.ts')) main()
+if (isDirectEntrypoint('advisory.ts')) {
+  void main()
+}

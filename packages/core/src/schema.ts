@@ -214,6 +214,40 @@ export interface OfficerLane {
   contextBudgetRefs: string[]
 }
 
+export type LaneMode = 'persistent_owner' | 'one_shot_reviewer' | 'read_only_judge' | 'temporary_contractor' | 'standing_review'
+export type LaneStatus = 'queued' | 'active' | 'blocked' | 'review' | 'merged' | 'closed' | 'stale'
+
+export interface LaneState {
+  laneId: string
+  title: string
+  owner: Sailor
+  ownerRegistryId: string
+  runtimeId: string | null
+  laneMode: LaneMode
+  status: LaneStatus
+  assignmentId: string
+  heartbeatAt: string | null
+  staleAfterMinutes: number
+  allowedScope: string[]
+  forbiddenScope: string[]
+  locks: string[]
+  dependencies: string[]
+  conflictsWith: string[]
+  contextRefs: string[]
+  contextBudgetRefs: string[]
+  laneMemoryRef: string
+  acceptanceRows: string[]
+  evidenceOwed: string[]
+  evidenceRefs: string[]
+  lastDelta: string
+  decisions: string[]
+  openQuestions: string[]
+  blockers: string[]
+  nextAction: string
+  closeoutCriteria: string[]
+  transferCriteria: string[]
+}
+
 export interface ContextBudgetRow {
   laneId: string
   owner: Sailor
@@ -223,10 +257,74 @@ export interface ContextBudgetRow {
   violation: boolean
 }
 
+export type ProjectStage =
+  | 'discovery'
+  | 'planning'
+  | 'delivery'
+  | 'launch_opening'
+  | 'incident_repair'
+  | 'maintenance'
+
+export interface DeliveryCalibrationArtifact {
+  projectStage: ProjectStage
+  outcomeUnit: string
+  deliveryShareTarget: number
+  qualityShareTarget: number
+  safetyShareTarget: number
+  processBudgetMax: number
+  maxPlanningOnlyCycles: number
+  minClosedOutcomesPerCycle: number
+  namedDeliverableRequired: boolean
+  gateCommand: string
+  blocks: string[]
+  nextAction: string
+  currentCycle?: {
+    id: string
+    processShare: number
+    deliveryShare: number
+    qualityShare: number
+    safetyShare: number
+    namedDeliverables: string[]
+    closedOutcomes: string[]
+    planningOnlyCycles: number
+    falseGreenRisk: boolean
+    safetyEvidenceRefs: string[]
+    qualityEvidenceRefs: string[]
+    ownerDecisionRequired: boolean
+    adjacentWorkActive: boolean
+    nextActionBound: boolean
+    reportingAttachedToOutcomes: boolean
+  }
+}
+
+export type CriticalPathMovement =
+  | 'moves_original_goal'
+  | 'adjacent_planning_only'
+  | 'evidence_only'
+  | 'blocked_waiting_owner'
+  | 'unknown'
+
 export interface OperatingSafetyArtifact {
   directQuestionDetected: boolean
   answerRequiredBeforeAction: boolean
   angerIncidentMode: boolean
+  productionOpeningGoalDetected: boolean
+  operatorDecisionRequired: boolean
+  ownerChoices: string[]
+  criticalPathMovement: CriticalPathMovement
+  adjacentPlanningSlicesAfterBlocker: number
+  hoursAfterBlocker: number
+  timeboxedBypassRequested: boolean
+  seoHttp200OnlySignal: boolean
+  seoParityMissing: boolean
+  claimedSwarm: boolean
+  p11hScoreGateActive: boolean
+  swarmRuntimeScore: number | null
+  captainImplementationShare: number | null
+  productiveCriticalLaneArtifacts: number | null
+  freshLaneOutputs: number | null
+  activeLaneCount: number | null
+  nextPacketState: string | null
   userIntentRows: UserIntentRow[]
   visualAcceptanceRows: VisibleAcceptanceRow[]
   missingVisibleObjects: string[]
@@ -256,6 +354,13 @@ export interface CrewPlanArtifact {
   forbiddenScopes: string[]
   subcrewPermissions: string[]
   captainOnlyReason: string | null
+  executionModel: 'direct_answer' | 'single_lane' | 'parallel_lane_swarm'
+  parallelLaneTarget: number
+  laneMemoryRequired: boolean
+  laneStates: LaneState[]
+  falseParallelismBlocks: string[]
+  deliveryCalibration: DeliveryCalibrationArtifact
+  captainWorkerPolicy: 'orchestrator_only' | 'local_worker_allowed'
   autoDispatch: false
 }
 
@@ -405,7 +510,7 @@ export interface AcceptedRiskValidationArtifact {
 }
 
 export interface ClosureMatrixArtifact {
-  closureStatus: 'ready_for_execution' | 'accepted_partial' | 'blocked'
+  closureStatus: 'ready_for_owner_review_planning_only' | 'ready_for_execution' | 'accepted_partial' | 'blocked'
   claimBindings: Array<{
     claimId: string
     artifactRef: string | null
@@ -483,7 +588,7 @@ export interface StarPomVerdictArtifact {
   acceptedRisks: string[]
   finalClaimAllowed: boolean
   productClosureAllowed: boolean
-  specPackageClosureStatus: 'ready_for_execution'
+  specPackageClosureStatus: 'ready_for_owner_review_planning_only' | 'ready_for_execution' | 'blocked'
   productClosureStatus: 'not_evaluated' | 'blocked'
 }
 
@@ -564,6 +669,8 @@ export type ExecutionDecision =
   | 'continue_now'
   | 'accepted_partial_next_packet'
   | 'blocked_external'
+  | 'operator_decision_required'
+  | 'ready_for_owner_review_planning_only'
   | 'ready_for_execution'
 
 export interface ExecutionStateMachineArtifact {

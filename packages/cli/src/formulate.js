@@ -32,7 +32,7 @@ function getTestScripts() {
   return [];
 }
 
-export async function runFormulateWizard(interactive = true, directIntent = '') {
+export async function runFormulateWizard(interactive = true, directIntent = '', requireConfirmation = false) {
   console.log('\n\x1b[35m======================================================================\x1b[0m');
   console.log('\x1b[35m🎯 🤖  CAPTAIN OS - ГЕНЕРАТОР ЦЕЛЕЙ ДЛЯ ИИ (DDP AUTO-PILOT)  🤖 🎯\x1b[0m');
   console.log('\x1b[35m======================================================================\x1b[0m\n');
@@ -172,11 +172,30 @@ ${domainGuidelines}
     console.log(`🎉 Прецизионный DDP-промпт успешно сгенерирован и сохранен в:`);
     console.log(`   \x1b[36m.captain-os/goal.md\x1b[0m`);
     console.log('\x1b[32m======================================================================\x1b[0m\n');
-    console.log('Вы можете скопировать следующий блок и вставить его при запуске команды /goal:\n');
     
-    console.log('\x1b[33m--- НАЧАЛО ПРОМПТА ---\x1b[0m');
-    console.log(ddpPrompt);
-    console.log('\x1b[33m--- КОНЕЦ ПРОМПТА ---\x1b[0m\n');
+    if (requireConfirmation) {
+      console.log('\x1b[33m--- СГЕНЕРИРОВАННЫЙ ПРОМПТ ---\x1b[0m');
+      console.log(ddpPrompt);
+      console.log('\x1b[33m------------------------------\x1b[0m\n');
+      
+      const rlConfirm = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      const answer = await askQuestion(rlConfirm, '👉 Я классифицировал задачу как сложную и сгенерировал жесткий контракт DDP. Утверждаете старт? [Y/N]: ');
+      rlConfirm.close();
+      
+      if (answer.trim().toLowerCase() !== 'y' && answer.trim().toLowerCase() !== 'yes') {
+        console.log('\x1b[31m❌ Выполнение отменено пользователем.\x1b[0m');
+        process.exit(1);
+      }
+      console.log('\x1b[32m✅ DDP-контракт утвержден. (Здесь будет логика запуска агента)\x1b[0m');
+    } else {
+      console.log('Вы можете скопировать следующий блок и вставить его при запуске команды /goal:\n');
+      console.log('\x1b[33m--- НАЧАЛО ПРОМПТА ---\x1b[0m');
+      console.log(ddpPrompt);
+      console.log('\x1b[33m--- КОНЕЦ ПРОМПТА ---\x1b[0m\n');
+    }
     return;
   }
 

@@ -16,7 +16,7 @@ npx -y captain-os init
 1. Мастер автоматически определит ваш пакетный менеджер (`npm`, `bun`, `pnpm`, `yarn`).
 2. Предложит ввести имя проекта и владельца.
 3. Поможет выбрать языковые модели для **Dynamic Captain Mode**.
-4. Сгенерирует файлы конфигурации `.captain-os/project.yaml` и `.captain-os/runtime-adapters.yaml`.
+4. Сгенерирует файлы конфигурации `.captain-os/project.yaml`, `.captain-os/runtime-adapters.yaml`, `.captain-os/owner-registry.yaml`, `.captain-os/task-spine.yaml` и `.captain-os.lock.json`.
 5. Предложит проиндексировать локальный RAG.
 
 ---
@@ -43,7 +43,26 @@ captain-os doctor
 ```
 *Сканирует систему на наличие необходимых конфигов, базы знаний RAG, локфайлов и выводит красивый цветной прогресс-бар готовности.*
 
-### 3. Управление снимками конфигурации (Snapshots)
+### 3. Проверка дисциплины swarm
+```bash
+captain-os swarm-score
+```
+*Проверяет P11H/P11L 9/10 swarm runtime: Captain не должен быть главным исполнителем, нужны свежие lane artifacts, Claude/StarPom freshness, agent thread lifecycle при лимите тредов, outcome binding для issue/reporting и отсутствие SEO/opening false-green.*
+
+### 4. Проверка delivery calibration
+```bash
+captain-os delivery-calibration
+```
+*Если в проекте есть `.captain-os/task-spine.yaml`, проверяет live `deliveryCalibration.currentCycle`: delivery/launch не могут считаться прогрессом без named outcomes, evidence и process budget.*
+
+### 5. Управление снимками конфигурации (Snapshots)
+### 5. P11L packet при лимите агентских тредов
+```bash
+captain-os agent-lane-lifecycle --outcomes /data/map,/data/smart-money --pr "#681"
+```
+*Генерирует bounded corrective packet: сохранить lane memory, закрыть recyclable threads, retry spawn и привязать issue/reporting к outcome rows.*
+
+### 6. Управление снимками конфигурации (Snapshots)
 Captain OS позволяет делать резервные копии локального состояния ИИ-агента для быстрого отката в случае ошибок:
 ```bash
 # Сохранить текущее состояние
@@ -73,3 +92,6 @@ captain-os rollback SNAP-20260520-XXXX
   npm run brain:index
   ```
 * **Совместимость с Git**: Все создаваемые файлы в папке `.captain-os/` (за исключением персональных секретов и локальных дампов логов в `.ship/`) рекомендуется закоммитить в ваш репозиторий. Это позволит вашей команде разработчиков мгновенно получить настроенную среду агентов сразу после клонирования проекта!
+* **Swarm flow без потери памяти**: Для сложных задач Captain OS использует один `.captain-os/task-spine.yaml`, но внутри него ведет несколько `laneStates`. Это позволяет запускать независимые агентские дорожки параллельно и не терять их контекст между one-shot запусками. Если работа называется swarm, проверяйте ее через `captain-os swarm-score`.
+* **Agent thread limit без потери контекста**: если рантайм уперся в лимит агентских тредов, сначала перенесите closeout delta, lane memory и issue/outcome/evidence refs в `.captain-os/task-spine.yaml`, затем закрывайте finished lanes и пробуйте следующий bounded spawn.
+* **Delivery без process-loop**: В delivery/launch стадиях обновляйте `deliveryCalibration.currentCycle` перед claim и проверяйте `captain-os delivery-calibration`; `fail_recalibrate` означает, что следующий packet должен вернуться к named outcomes.

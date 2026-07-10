@@ -233,8 +233,10 @@ function buildOperatingSafetyProbes(outDir: string, requireOperatingSafety: bool
     const expectedCovered = probe.expectedBlocks.every((block) => actualBlocks.includes(block))
     const noUnexpectedCleanBlock = probe.expectedBlocks.length > 0 || actualBlocks.length === 0
     const decisionMatches = probe.expectedBlocks.length === 0
-      ? advisory.stateMachine.decision === 'ready_for_execution'
-      : advisory.stateMachine.decision === 'blocked_external'
+      ? advisory.stateMachine.decision === 'ready_for_owner_review_planning_only' ||
+        advisory.stateMachine.decision === 'ready_for_execution'
+      : advisory.stateMachine.decision === 'blocked_external' ||
+        advisory.stateMachine.decision === 'operator_decision_required'
     const status = expectedCovered && noUnexpectedCleanBlock && decisionMatches ? 'pass' : 'fail'
     return {
       fixtureId: probe.fixtureId,
@@ -507,7 +509,8 @@ function main(): void {
 }
 
 function isDirectEntrypoint(fileName: string): boolean {
-  return (process.argv[1] ?? '').replace(/\\/g, '/').endsWith(`/scripts/captain-lab/${fileName}`)
+  const entrypoint = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return entrypoint.endsWith(`/packages/core/src/${fileName}`) || entrypoint.endsWith(`/scripts/captain-lab/${fileName}`)
 }
 
 if (isDirectEntrypoint('p10d-global-enablement-canary.ts')) main()

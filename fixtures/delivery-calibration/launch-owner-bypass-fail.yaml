@@ -1,0 +1,37 @@
+schemaVersion: captain-task-spine.v1
+spineId: FIXTURE-LAUNCH-OWNER-FAIL
+status: active
+mode: shadow
+updatedAt: "2026-06-08"
+owner: captain-codex
+
+deliveryCalibration:
+  projectStage: launch_opening
+  outcomeUnit: named readiness/opening outcome
+  deliveryShareTarget: 0.35
+  qualityShareTarget: 0.25
+  safetyShareTarget: 0.3
+  processBudgetMax: 0.3
+  maxPlanningOnlyCycles: 0
+  minClosedOutcomesPerCycle: 1
+  namedDeliverableRequired: true
+  gateCommand: captain-os delivery-calibration
+  currentVerdict: not_checked
+  currentCycle:
+    id: fixture_launch_owner_bypass_fail
+    processShare: 0.26
+    deliveryShare: 0.38
+    qualityShare: 0.26
+    safetyShare: 0.34
+    namedDeliverables:
+      - /pages/opening-candidate
+    closedOutcomes: []
+    planningOnlyCycles: 1
+    falseGreenRisk: true
+    safetyEvidenceRefs:
+      - robots/canonical/sitemap evidence
+    qualityEvidenceRefs:
+      - smoke report
+    ownerDecisionRequired: true
+    adjacentWorkActive: true
+    nextActionBound: true

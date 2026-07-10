@@ -1,6 +1,6 @@
 import { compileArtifactSpec } from './artifact-compiler'
 import { buildAdvisoryReport } from './execution-state-machine'
-import { loadAllFixtures, assertNoPrivateReasoningFixtures } from './fixtures'
+import { fixtureFilePath, loadAllFixtures, assertNoPrivateReasoningFixtures } from './fixtures'
 import { LabInputError, LabUnsafeWriteError, assertSafeShadowOutDir, timestampRunId } from './io'
 import { runLab } from './ship'
 
@@ -91,7 +91,7 @@ function assertArtifactCompiler(smokeId: string, failures: Failure[]): void {
     for (const [fixtureFile, expectedBlock] of p9dFixtures) {
       const fixtureId = fixtureFile.replace(/\.(ya?ml|md)$/, '')
       const artifacts = compileArtifactSpec({
-        spec: `docs/process/captain-os-lab/fixtures/p9d-hardening/${fixtureFile}`,
+        spec: fixtureFilePath('p9d-hardening', fixtureFile),
         out: `.ship/lab/runs/${smokeId}/p9d-${fixtureId}`,
       })
       if (expectedBlock === null) {
@@ -306,7 +306,7 @@ function assertOperatingSafetyIntegration(smokeId: string, failures: Failure[]):
       failures,
     )
     assert(
-      cleanReport.stateMachine.decision === 'ready_for_execution',
+      cleanReport.stateMachine.decision === 'ready_for_owner_review_planning_only',
       'p0-operating-safety-clean',
       `clean control should stay lightweight, got ${cleanReport.stateMachine.decision}`,
       failures,
@@ -314,6 +314,106 @@ function assertOperatingSafetyIntegration(smokeId: string, failures: Failure[]):
   } catch (error) {
     failures.push({
       fixture: 'p0-operating-safety-integration',
+      reason: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+function assertOperatorDecisionInterrupt(smokeId: string, failures: Failure[]): void {
+  try {
+    const artifacts = runLab({
+      fixture: 'operator-decision-required-adjacent-planning-continues',
+      mode: 'shadow',
+      out: `.ship/lab/runs/${smokeId}/operator-decision-required-adjacent-planning-continues`,
+    })
+    const report = buildAdvisoryReport(artifacts)
+    const expectedBlocks = [
+      'operator_decision_required_interrupt',
+      'critical_path_vs_adjacent_work',
+      'blocked_but_continuing_budget',
+      'seo_http_200_false_green_parity_missing',
+    ]
+
+    for (const block of expectedBlocks) {
+      assert(
+        artifacts.operatingSafety.blocks.includes(block),
+        'operator-decision-required-adjacent-planning-continues',
+        `missing operating-safety block ${block}: ${artifacts.operatingSafety.blocks.join(', ')}`,
+        failures,
+      )
+    }
+    assert(
+      artifacts.operatingSafety.criticalPathMovement === 'adjacent_planning_only',
+      'operator-decision-critical-path-movement',
+      `expected adjacent_planning_only, got ${artifacts.operatingSafety.criticalPathMovement}`,
+      failures,
+    )
+    assert(
+      artifacts.operatingSafety.adjacentPlanningSlicesAfterBlocker > 2 &&
+        artifacts.operatingSafety.hoursAfterBlocker > 2,
+      'operator-decision-budget',
+      `expected exhausted blocked-continuing budget, got slices=${artifacts.operatingSafety.adjacentPlanningSlicesAfterBlocker}, hours=${artifacts.operatingSafety.hoursAfterBlocker}`,
+      failures,
+    )
+    assert(
+      artifacts.operatingSafety.ownerChoices.length === 2,
+      'operator-decision-owner-choices',
+      `expected exactly 2 owner choices, got ${artifacts.operatingSafety.ownerChoices.length}`,
+      failures,
+    )
+    assert(
+      report.stateMachine.decision === 'operator_decision_required',
+      'operator-decision-state-machine',
+      `expected operator_decision_required decision, got ${report.stateMachine.decision}`,
+      failures,
+    )
+    assert(
+      report.metrics.preventedFailureSignals.includes('seo_http_200_false_green_parity_missing'),
+      'operator-decision-seo-parity-signal',
+      `missing SEO parity signal: ${report.metrics.preventedFailureSignals.join(', ')}`,
+      failures,
+    )
+  } catch (error) {
+    failures.push({
+      fixture: 'operator-decision-required-adjacent-planning-continues',
+      reason: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+function assertFalseParallelism(smokeId: string, failures: Failure[]): void {
+  try {
+    const artifacts = runLab({
+      fixture: 'false-parallelism-no-persistent-lanes',
+      mode: 'shadow',
+      out: `.ship/lab/runs/${smokeId}/false-parallelism-no-persistent-lanes`,
+    })
+    const report = buildAdvisoryReport(artifacts)
+    const expectedBlocks = ['false_parallelism_no_persistent_lanes', 'lane_memory_missing']
+
+    for (const block of expectedBlocks) {
+      assert(
+        artifacts.operatingSafety.blocks.includes(block),
+        'false-parallelism-no-persistent-lanes',
+        `missing operating-safety block ${block}: ${artifacts.operatingSafety.blocks.join(', ')}`,
+        failures,
+      )
+      assert(
+        report.stateMachine.openWork.operatingSafetyBlocks.includes(block),
+        'false-parallelism-state-machine',
+        `state machine missing operating-safety block ${block}: ${report.stateMachine.openWork.operatingSafetyBlocks.join(', ')}`,
+        failures,
+      )
+    }
+    assert(
+      report.stateMachine.decision === 'blocked_external',
+      'false-parallelism-state-machine-decision',
+      `expected blocked_external decision, got ${report.stateMachine.decision}`,
+      failures,
+    )
+  } catch (error) {
+    failures.push({
+      fixture: 'false-parallelism-no-persistent-lanes',
       reason: error instanceof Error ? error.message : String(error),
     })
   }
@@ -508,6 +608,8 @@ function main(): void {
   assertArtifactCompiler(smokeId, failures)
   assertP9DAdvisoryIntegration(smokeId, failures)
   assertOperatingSafetyIntegration(smokeId, failures)
+  assertOperatorDecisionInterrupt(smokeId, failures)
+  assertFalseParallelism(smokeId, failures)
   assertP10GRuntimeHardening(smokeId, failures)
   assertP11FAutoBootstrap(smokeId, failures)
   for (const fixture of fixtures) {
@@ -551,7 +653,8 @@ function main(): void {
 }
 
 function isDirectEntrypoint(fileName: string): boolean {
-  return (process.argv[1] ?? '').replace(/\\/g, '/').endsWith(`/scripts/captain-lab/${fileName}`)
+  const entrypoint = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return entrypoint.endsWith(`/packages/core/src/${fileName}`) || entrypoint.endsWith(`/scripts/captain-lab/${fileName}`)
 }
 
 if (isDirectEntrypoint('smoke.ts')) main()

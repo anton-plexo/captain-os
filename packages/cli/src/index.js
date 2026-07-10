@@ -30,6 +30,10 @@ import { runValidator } from './lock-validator.js';
 import { executeSimplificationPipeline } from './simplifier.js';
 import { runConfigureWizard } from './configure-wizard.js';
 import { runFormulateWizard } from './formulate.js';
+import { classifyIntent } from './intent-router.js';
+import { runSwarmRuntimeScoreCommand } from './swarm-runtime-score.js';
+import { runDeliveryCalibrationCommand } from './delivery-calibration.js';
+import { runAgentLaneLifecycleCommand } from './agent-lane-lifecycle.js';
 
 const command = process.argv[2] || 'help';
 
@@ -39,10 +43,33 @@ if (command === 'doctor') {
   const isDryRun = process.argv.includes('--dry-run');
   const rawArgs = process.argv.slice(3).filter(arg => arg !== '--dry-run' && !arg.startsWith('-'));
   const directIntent = rawArgs.join(' ').trim();
-  runFormulateWizard(!isDryRun, directIntent).catch(e => {
-    console.error('❌ Ошибка работы Goal Formulator:', e.message);
-    process.exit(1);
-  });
+
+  if (directIntent && !isDryRun) {
+    const route = classifyIntent(directIntent);
+    if (route === 'FAST_PATH') {
+      console.log('\n\x1b[32m🚀 [FAST_PATH]\x1b[0m Классификатор определил задачу как тривиальную (Low Blast Radius).');
+      console.log(`Задача: "${directIntent}"`);
+      // Direct-executor handoff is not implemented yet. Until it is, fall through
+      // to the wizard instead of exiting 0 with no output (which read as a silent success).
+      console.log('Прямой вызов исполнителя пока не реализован — генерирую DDP-манифест через Goal Formulator.');
+      runFormulateWizard(!isDryRun, directIntent, true).catch(e => {
+        console.error('❌ Ошибка работы Goal Formulator:', e.message);
+        process.exit(1);
+      });
+    } else {
+      console.log('\n\x1b[33m🧠 [DEEP_PATH]\x1b[0m Обнаружена архитектурная задача (High/Medium Blast Radius).');
+      console.log('Вызов Goal Formulator для генерации DDP-манифеста...');
+      runFormulateWizard(!isDryRun, directIntent, true).catch(e => {
+        console.error('❌ Ошибка работы Goal Formulator:', e.message);
+        process.exit(1);
+      });
+    }
+  } else {
+    runFormulateWizard(!isDryRun, directIntent, false).catch(e => {
+      console.error('❌ Ошибка работы Goal Formulator:', e.message);
+      process.exit(1);
+    });
+  }
 } else if (command === 'configure') {
   const isDryRun = process.argv.includes('--dry-run');
   runConfigureWizard(!isDryRun);
@@ -56,6 +83,12 @@ if (command === 'doctor') {
   }
 } else if (command === 'validate-lock' || command === 'check-lock') {
   runValidator();
+} else if (command === 'swarm-score' || command === 'swarm:score') {
+  process.exitCode = runSwarmRuntimeScoreCommand(process.argv.slice(3));
+} else if (command === 'delivery-calibration' || command === 'delivery:calibration') {
+  process.exitCode = runDeliveryCalibrationCommand(process.argv.slice(3));
+} else if (command === 'agent-lane-lifecycle' || command === 'lane-lifecycle') {
+  process.exitCode = runAgentLaneLifecycleCommand(process.argv.slice(3));
 } else if (command === 'simplify') {
   const isDryRun = process.argv.includes('--dry-run');
   executeSimplificationPipeline(process.cwd(), isDryRun).catch(e => {
@@ -82,6 +115,9 @@ if (command === 'doctor') {
   console.log('  configure            - Run interactive prompt-wizard to customize project rules');
   console.log('  formulate            - Generate perfect DDP goals from simple user inputs');
   console.log('  doctor               - Check environment health and readiness');
+  console.log('  swarm-score          - Run P11H swarm 9/10 runtime score gate');
+  console.log('  delivery-calibration - Run live task-spine delivery calibration gate (--fixtures for core simulations)');
+  console.log('  agent-lane-lifecycle - Generate a P11L thread-limit closeout/recycle corrective packet');
   console.log('  validate-lock        - Validate .captain-os.lock.json structure and policies');
   console.log('  simplify             - Run code simplification pipeline (add --dry-run for preview)');
   console.log('  snapshot list        - List all saved snapshots');

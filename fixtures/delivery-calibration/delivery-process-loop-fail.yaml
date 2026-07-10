@@ -1,0 +1,35 @@
+schemaVersion: captain-task-spine.v1
+spineId: FIXTURE-DELIVERY-FAIL
+status: active
+mode: shadow
+updatedAt: "2026-06-08"
+owner: captain-codex
+
+deliveryCalibration:
+  projectStage: delivery
+  outcomeUnit: named deliverable/page/cohort
+  deliveryShareTarget: 0.5
+  qualityShareTarget: 0.25
+  safetyShareTarget: 0.15
+  processBudgetMax: 0.25
+  maxPlanningOnlyCycles: 1
+  minClosedOutcomesPerCycle: 1
+  namedDeliverableRequired: true
+  gateCommand: captain-os delivery-calibration
+  currentVerdict: not_checked
+  currentCycle:
+    id: fixture_delivery_process_loop_fail
+    processShare: 0.66
+    deliveryShare: 0.14
+    qualityShare: 0.18
+    safetyShare: 0.12
+    namedDeliverables: []
+    closedOutcomes: []
+    planningOnlyCycles: 3
+    falseGreenRisk: false
+    safetyEvidenceRefs: []
+    qualityEvidenceRefs:
+      - acceptance matrix
+    ownerDecisionRequired: false
+    adjacentWorkActive: false
+    nextActionBound: false

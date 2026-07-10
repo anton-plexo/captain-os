@@ -24,11 +24,20 @@
     },
     "captainEligibility": {
       "type": "string",
-      "enum": ["primary", "secondary", "crew_only", "disabled"]
+      "enum": ["primary", "secondary", "dynamic", "crew_only", "disabled"]
     },
     "defaultRole": {
       "type": "string",
-      "enum": ["captain", "read_only_judge", "worker"]
+      "enum": ["captain", "captain_first", "read_only_judge", "worker"]
+    },
+    "swarmRole": {
+      "type": "string",
+      "enum": [
+        "orchestrator_and_integrator",
+        "standing_review_lane",
+        "optional_judge_or_packeted_lane",
+        "packet_worker"
+      ]
     },
     "capabilities": {
       "type": "object",
